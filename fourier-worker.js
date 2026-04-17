@@ -104,26 +104,6 @@ function binaryEdgesFromMagnitude(mag, w, h, edgeThreshold) {
   return out;
 }
 
-/** RGBA cyan “neon line” preview from magnitude (for UI animation). */
-function lineArtRgbaFromMagnitude(mag, w, h) {
-  let maxM = 1e-6;
-  for (let i = 0; i < mag.length; i++) {
-    if (mag[i] > maxM) maxM = mag[i];
-  }
-  const inv = 1 / maxM;
-  const rgba = new Uint8ClampedArray(w * h * 4);
-  for (let i = 0; i < mag.length; i++) {
-    const t = Math.min(1, mag[i] * inv);
-    const a = Math.floor(255 * Math.pow(t, 0.55));
-    const o = i * 4;
-    rgba[o] = 20;
-    rgba[o + 1] = 230;
-    rgba[o + 2] = 255;
-    rgba[o + 3] = a;
-  }
-  return rgba;
-}
-
 const PATH_COUNT = 10;
 /** Suggested max harmonics per path (largest blobs → more terms), clamped to sample count N. */
 const PATH_TERM_CAPS = [200, 120, 40, 40, 25, 25, 30, 50, 35, 20];
@@ -369,18 +349,7 @@ self.onmessage = (e) => {
 
     const mag = sobelMagnitudeFloat(simplified, w, h);
 
-    const lineArtRgba = lineArtRgbaFromMagnitude(mag, w, h);
-    self.postMessage(
-      {
-        type: "previewLineArt",
-        w,
-        h,
-        lineArt: lineArtRgba,
-      },
-      [lineArtRgba.buffer]
-    );
-
-    self.postMessage({ type: "progress", percent: 38, stage: "Thresholding edges for contours…" });
+    self.postMessage({ type: "progress", percent: 36, stage: "Thresholding edges for contours…" });
 
     const edges = binaryEdgesFromMagnitude(mag, w, h, edgeThreshold);
 
@@ -451,9 +420,6 @@ self.onmessage = (e) => {
       pathIndex += 1;
     }
 
-    const edgePreview = edges.buffer;
-    transfers.push(edgePreview);
-
     self.postMessage(
       {
         type: "done",
@@ -468,7 +434,6 @@ self.onmessage = (e) => {
           coeffsRe: p.coeffsRe,
           coeffsIm: p.coeffsIm,
         })),
-        edgePreview,
       },
       transfers
     );

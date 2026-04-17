@@ -240,8 +240,13 @@
       .hero { grid-template-columns: 1fr; }
     }
     .stack { display: grid; gap: 16px; }
-    .visual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media (max-width: 1200px) { .visual-grid { grid-template-columns: 1fr; } }
+    .visual-sketch {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
     .card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -679,8 +684,8 @@
       <div class="hero-main">
         <h1>Fourier Epicycle Studio</h1>
         <p class="hint">
-          Upload an image, extract contours, and animate sparse Fourier epicycles. Paths are processed in a worker
-          for smooth interaction, then exported as parametric equations for tools like Desmos.
+          Upload an image and watch sparse Fourier epicycles sketch it live. Contours are found under the hood;
+          the main view is the drawing animation, with an optional 3D stack of the same paths.
         </p>
         <div class="hero-badges">
           <div class="mini-pill">Up to 10 contour paths</div>
@@ -692,7 +697,7 @@
         <div class="stats">
           <div class="stat">
             <div class="stat-k">Pipeline</div>
-            <div class="stat-v">Image → Contours → Sparse FFT</div>
+            <div class="stat-v">Image → contours → live sketch</div>
           </div>
           <div class="stat">
             <div class="stat-k">Reconstruction</div>
@@ -793,20 +798,11 @@
       </div>
 
       <div class="stack">
-        <div class="visual-grid">
+        <div class="visual-sketch">
           <div class="card card--lift">
             <div class="card-head">
-              <h2>Edge Preview</h2>
-              <span class="card-subtle">Line art → contour mask</span>
-            </div>
-            <div class="canvas-wrap">
-              <canvas id="edgeCanvas" width="520" height="520"></canvas>
-            </div>
-          </div>
-          <div class="card card--lift">
-            <div class="card-head">
-              <h2>Epicycle Trace</h2>
-              <span class="card-subtle">Sparse Fourier reconstruction</span>
+              <h2>Sketch</h2>
+              <span class="card-subtle">Fourier epicycles drawing your image</span>
             </div>
             <div class="canvas-wrap">
               <canvas id="drawCanvas" width="520" height="520"></canvas>
@@ -865,8 +861,6 @@
       }, ms);
     }
 
-    const edgeCanvas = document.getElementById("edgeCanvas");
-    const edgeCtx = edgeCanvas.getContext("2d", { willReadFrequently: true });
     const drawCanvas = document.getElementById("drawCanvas");
     const drawCtx = drawCanvas.getContext("2d");
     const threeCanvas = document.getElementById("threeCanvas");
@@ -884,13 +878,6 @@
     let raf = null;
     let threeReady = false;
     let threeState = null;
-
-    let lineArtAnimActive = false;
-    let lineArtAnimToken = 0;
-    /** @type {Uint8Array | null} */
-    let pendingContourEdges = null;
-    let pendingContourW = 0;
-    let pendingContourH = 0;
 
     function pathStroke(i, n, alpha = 1) {
       const h = (360 * i) / Math.max(1, n);
@@ -1078,65 +1065,6 @@
       statusEl.textContent = msg;
     }
 
-    function renderEdgePreview(edges, w, h) {
-      const img = edgeCtx.createImageData(w, h);
-      const d = img.data;
-      for (let i = 0; i < edges.length; i++) {
-        const v = edges[i];
-        const o = i * 4;
-        d[o] = 0;
-        d[o + 1] = v;
-        d[o + 2] = 0;
-        d[o + 3] = 255;
-      }
-      edgeCtx.putImageData(img, 0, 0);
-    }
-
-    function easeOutCubic(t) {
-      const u = Math.min(1, Math.max(0, t));
-      return 1 - (1 - u) ** 3;
-    }
-
-    /**
-     * Fade + top-to-bottom reveal of simplified Sobel line art (cyan on dark), then run onComplete.
-     */
-    function startLineArtIntro(baseRgba, w, h, onComplete) {
-      const token = ++lineArtAnimToken;
-      const t0 = performance.now();
-      const duration = 1250;
-      const base = new Uint8ClampedArray(baseRgba);
-
-      function frame(now) {
-        if (token !== lineArtAnimToken) return;
-        const t = (now - t0) / duration;
-        const fade = easeOutCubic(t);
-        const sweep = easeOutCubic(t);
-        const cutY = Math.floor(h * sweep);
-        const img = edgeCtx.createImageData(w, h);
-        const d = img.data;
-        for (let y = 0; y < h; y++) {
-          const rowOn = y < cutY ? 1 : 0;
-          for (let x = 0; x < w; x++) {
-            const i = (y * w + x) * 4;
-            const a = Math.floor(base[i + 3] * fade * rowOn);
-            d[i] = base[i];
-            d[i + 1] = base[i + 1];
-            d[i + 2] = base[i + 2];
-            d[i + 3] = a;
-          }
-        }
-        edgeCtx.fillStyle = "#03060f";
-        edgeCtx.fillRect(0, 0, w, h);
-        edgeCtx.putImageData(img, 0, 0);
-        if (t < 1) {
-          requestAnimationFrame(frame);
-        } else if (onComplete) {
-          onComplete();
-        }
-      }
-      requestAnimationFrame(frame);
-    }
-
     function tick() {
       raf = requestAnimationFrame(tick);
       drawCtx.fillStyle = "#000";
@@ -1217,9 +1145,6 @@
       if (!file) return;
       lastFile = file;
       cancelAnimationFrame(raf);
-      lineArtAnimToken += 1;
-      lineArtAnimActive = false;
-      pendingContourEdges = null;
       traces = [];
       tParam = 0;
       paths = [];
@@ -1255,27 +1180,8 @@
         const msg = ev.data;
         if (msg.type === "progress") {
           setProgress(msg.percent, msg.stage || "Working…");
-        } else if (msg.type === "previewLineArt") {
-          const pw = msg.w;
-          const ph = msg.h;
-          const rgba = msg.lineArt;
-          if (!(rgba instanceof Uint8ClampedArray) || rgba.length !== pw * ph * 4) return;
-          edgeCanvas.width = pw;
-          edgeCanvas.height = ph;
-          lineArtAnimActive = true;
-          setProgress(40, "Previewing simplified line art…");
-          startLineArtIntro(rgba, pw, ph, () => {
-            lineArtAnimActive = false;
-            if (pendingContourEdges && pendingContourW === pw && pendingContourH === ph) {
-              renderEdgePreview(pendingContourEdges, pw, ph);
-              pendingContourEdges = null;
-            }
-          });
         } else if (msg.type === "error") {
           w.removeEventListener("message", onMessage);
-          lineArtAnimToken += 1;
-          lineArtAnimActive = false;
-          pendingContourEdges = null;
           setProgress(0, msg.message || "Error");
           meta.textContent = "";
         } else if (msg.type === "done") {
@@ -1284,19 +1190,6 @@
           imgH = msg.h;
           drawCanvas.width = msg.w;
           drawCanvas.height = msg.h;
-          if (edgeCanvas.width !== msg.w || edgeCanvas.height !== msg.h) {
-            edgeCanvas.width = msg.w;
-            edgeCanvas.height = msg.h;
-          }
-
-          const edges = new Uint8Array(msg.edgePreview);
-          pendingContourEdges = edges;
-          pendingContourW = msg.w;
-          pendingContourH = msg.h;
-          if (!lineArtAnimActive) {
-            renderEdgePreview(edges, msg.w, msg.h);
-            pendingContourEdges = null;
-          }
 
           paths = (msg.paths || []).map((p) => ({
             freqs: new Int16Array(p.freqs),

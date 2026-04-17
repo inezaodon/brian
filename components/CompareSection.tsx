@@ -79,7 +79,7 @@ export function CompareSection() {
         </div>
         <div className="rounded-2xl border border-stone-200 bg-slate-950 p-3 shadow-sm">
           <div className="text-center font-mono text-[10px] uppercase tracking-wider text-slate-400">
-            2 · Line art
+            2 · Line art (enhanced)
           </div>
           <div className="mt-2 flex aspect-square max-h-64 items-center justify-center">
             {lineArtDataUrl ? (

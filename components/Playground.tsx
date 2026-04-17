@@ -53,7 +53,7 @@ export function Playground() {
         </div>
         <div className="overflow-hidden rounded-2xl border border-stone-200 bg-slate-950 p-3 shadow-sm">
           <p className="text-center font-mono text-[10px] uppercase tracking-wider text-slate-400">
-            Neon line art (Sobel magnitude)
+            Neon line art (NMS + tone map + bloom)
           </p>
           <div className="mt-2 flex max-h-56 min-h-[140px] items-center justify-center">
             {lineArtDataUrl ? (

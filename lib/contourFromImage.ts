@@ -4,7 +4,9 @@
  * 1. **Grayscale** — ITU-R BT.601 luminance (0.299R + 0.587G + 0.114B).
  * 2. **Shape-preserving simplify** — separable box blur (**3 passes**, radius 2), then
  *    `0.62·blur + 0.38·raw` (matches your `Downloads/fourier-worker.js` and tuned studio).
- * 3. **Sobel magnitude** — 3×3 kernels Gx, Gy on the simplified image; store √(Gx² + Gy²).
+ * 3. **Sobel magnitude** — 3×3 kernels Gx, Gy on the simplified image; store √(Gx² + Gy²). The **neon line art**
+ *    preview uses a separate high-quality pipeline (`neonLineArt.ts`: NMS, tone map, bloom, unsharp, color grade);
+ *    contour thresholding still uses this raw magnitude.
  * 4. **Adaptive threshold** — binary mask: Sobel magnitude ≥ a **percentile** of sampled
  *    magnitudes. The legacy `edgeThreshold` slider (20–255) maps to percentile
  *    `p = 0.88 + ((thr−20)/(255−20))·0.11` (stricter edges when the slider is higher).
@@ -23,6 +25,7 @@
 
 import type { Point2 } from "./fourier";
 import { resampleByArcLength } from "./fourier";
+import { renderNeonLineArtDataUrl } from "./neonLineArt";
 
 export type ContourFromImageOptions = {
   maxSide?: number;
@@ -98,59 +101,6 @@ function simplifyGrayscale(gray: Float32Array, w: number, h: number): Float32Arr
     out[i] = 0.62 * a[i] + 0.38 * gray[i];
   }
   return out;
-}
-
-/** Neon Sobel preview from magnitude (studio `lineArtRgbaFromMagnitude`). */
-function lineArtRgbaFromMagnitude(mag: Float32Array, w: number, h: number): Uint8ClampedArray {
-  const n = mag.length;
-  let maxM = 1e-6;
-  for (let i = 0; i < n; i++) {
-    if (mag[i] > maxM) maxM = mag[i];
-  }
-  const inv = 1 / maxM;
-  const strength = new Float32Array(n);
-  for (let i = 0; i < n; i++) {
-    const t = Math.min(1, mag[i] * inv);
-    strength[i] = t ** 0.42;
-  }
-  const dilated = new Float32Array(n);
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      let m = 0;
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          const nx = x + dx;
-          const ny = y + dy;
-          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
-          const v = strength[ny * w + nx];
-          if (v > m) m = v;
-        }
-      }
-      dilated[y * w + x] = m;
-    }
-  }
-  const rgba = new Uint8ClampedArray(n * 4);
-  for (let i = 0; i < n; i++) {
-    const a = Math.floor(255 * dilated[i]);
-    const o = i * 4;
-    rgba[o] = 30;
-    rgba[o + 1] = 238;
-    rgba[o + 2] = 255;
-    rgba[o + 3] = a;
-  }
-  return rgba;
-}
-
-function rgbaToPngDataUrl(rgba: Uint8ClampedArray, w: number, h: number): string {
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return "";
-  const copy = new Uint8ClampedArray(rgba.length);
-  copy.set(rgba);
-  ctx.putImageData(new ImageData(copy, w, h), 0, 0);
-  return canvas.toDataURL("image/png");
 }
 
 function sobelMagnitudeFloat(gray: Float32Array, w: number, h: number): Float32Array {
@@ -312,7 +262,7 @@ export async function contourPathFromImageFile(
   const gray = grayscaleFromImageData(data, w, h);
   const simplified = simplifyGrayscale(gray, w, h);
   const mag = sobelMagnitudeFloat(simplified, w, h);
-  const lineArtDataUrl = rgbaToPngDataUrl(lineArtRgbaFromMagnitude(mag, w, h), w, h);
+  const lineArtDataUrl = renderNeonLineArtDataUrl(simplified, w, h);
   const edges = binaryEdgesFromMagnitude(mag, w, h, edgeThreshold);
 
   const components = connectedEdgeComponents(edges, w, h);

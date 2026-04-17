@@ -172,7 +172,8 @@ export function VisualDeck() {
                 </div>
               )}
               <p className="absolute bottom-2 left-2 right-2 text-center text-[11px] text-slate-300">
-                Same neon Sobel preview recipe as the static worker (shape-forward, dilated strength).
+                Sobel on simplified gray → non-max suppression → contrast stretch → dual-radius bloom → unsharp →
+                neon grade (supersampled when small).
               </p>
             </div>
           )}

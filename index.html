@@ -231,13 +231,39 @@
     }
     .layout {
       display: grid;
-      grid-template-columns: 340px minmax(0, 1fr);
+      grid-template-columns: 300px minmax(0, 1fr) minmax(260px, 300px);
       gap: 16px;
       align-items: start;
     }
+    @media (max-width: 1280px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .plain-panel { order: 3; max-width: 100%; }
+    }
     @media (max-width: 1020px) {
-      .layout { grid-template-columns: 1fr; }
       .hero { grid-template-columns: 1fr; }
+    }
+    .plain-panel textarea {
+      width: 100%;
+      min-height: 220px;
+      margin-top: 8px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(6, 10, 20, 0.92);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.45;
+      resize: vertical;
+      word-break: break-all;
+    }
+    .plain-panel textarea:hover,
+    .plain-panel textarea:focus {
+      outline: none;
+      border-color: rgba(74, 232, 255, 0.35);
+      box-shadow: 0 0 0 3px rgba(74, 232, 255, 0.1);
     }
     .stack { display: grid; gap: 16px; }
     .visual-sketch {
@@ -788,7 +814,7 @@
         </div>
 
         <div class="control-group export-wrap">
-          <h3>Export</h3>
+          <h3>Export (with notes)</h3>
           <div class="button-row">
             <button type="button" class="primary" id="copyDesmos">Copy Desmos equations</button>
             <button type="button" class="secondary" id="refreshExport">Refresh export text</button>
@@ -820,6 +846,21 @@
           <div class="mono" id="threeMeta">3D view — drag to orbit, scroll to zoom after processing.</div>
         </div>
       </div>
+
+      <aside class="card plain-panel card--lift">
+        <div class="card-head">
+          <h2>Plain text</h2>
+          <span class="card-subtle">Desmos-ready ASCII</span>
+        </div>
+        <p class="hint" style="font-size:12px;margin:0 0 6px;">
+          No comments or special characters. Paste into Desmos as expressions; use
+          <span class="mono" style="font-size:11px;">(cx+X_1(t), cy-Y_1(t))</span> for each path (y-up).
+        </p>
+        <textarea id="plainOut" readonly spellcheck="false" placeholder="Process an image to fill plain-text equations…"></textarea>
+        <div class="button-row">
+          <button type="button" class="primary" id="copyPlain">Copy plain text</button>
+        </div>
+      </aside>
     </div>
 
     <p class="hint footer-hint">
@@ -840,6 +881,8 @@
     const copyDesmosBtn = document.getElementById("copyDesmos");
     const refreshExportBtn = document.getElementById("refreshExport");
     const exportOut = document.getElementById("exportOut");
+    const plainOut = document.getElementById("plainOut");
+    const copyPlainBtn = document.getElementById("copyPlain");
 
     const edgeVal = document.getElementById("edgeVal");
     const maxPtsVal = document.getElementById("maxPtsVal");
@@ -1034,8 +1077,42 @@
       return lines.join("\n");
     }
 
+    /** ASCII-only lines Desmos can paste: cx, cy, then X_n(t) and Y_n(t) with no comments or unicode. */
+    function buildPlainTextExport() {
+      if (!paths.length) {
+        return "No paths yet - upload and process an image first.";
+      }
+      const lines = [];
+      const cx = round6(imgW / 2);
+      const cy = round6(imgH / 2);
+      lines.push(`cx=${cx}`);
+      lines.push(`cy=${cy}`);
+      for (let pi = 0; pi < paths.length; pi++) {
+        const p = paths[pi];
+        const cap = effectiveTerms(pi);
+        const { coeffsRe, coeffsIm } = p;
+        const k = pi + 1;
+        const partsX = [];
+        const partsY = [];
+        for (let j = 0; j < cap; j++) {
+          const freq = p.freqs[j];
+          const ck = coeffsRe[j];
+          const sk = coeffsIm[j];
+          const A = round6(Math.hypot(ck, sk));
+          const ph = round6(Math.atan2(sk, ck));
+          if (j > 0 && Math.abs(A) < 1e-8) continue;
+          partsX.push(`${A}*cos(${freq}*t+${ph})`);
+          partsY.push(`${A}*sin(${freq}*t+${ph})`);
+        }
+        lines.push(`X_${k}(t)=${partsX.join("+")}`);
+        lines.push(`Y_${k}(t)=${partsY.join("+")}`);
+      }
+      return lines.join("\n");
+    }
+
     function refreshExportText() {
       exportOut.value = buildDesmosExport();
+      if (plainOut) plainOut.value = buildPlainTextExport();
       rebuildThreeGeometry();
     }
 
@@ -1125,7 +1202,6 @@
       tParam += dt;
       if (tParam > 2 * Math.PI) {
         tParam -= 2 * Math.PI;
-        traces = paths.map(() => []);
       }
 
       if (threeReady && threeState) {
@@ -1254,6 +1330,20 @@
     refreshExportBtn.addEventListener("click", () => {
       refreshExportText();
       showToast("Export text refreshed.");
+    });
+
+    copyPlainBtn.addEventListener("click", async () => {
+      refreshExportText();
+      const t = plainOut ? plainOut.value : "";
+      try {
+        await navigator.clipboard.writeText(t);
+        statusEl.textContent = "Copied plain text to clipboard.";
+        showToast("Plain text copied - paste into Desmos.");
+      } catch (_) {
+        if (plainOut) plainOut.select();
+        statusEl.textContent = "Clipboard blocked - select plain text and copy manually.";
+        showToast("Select plain text and copy manually (browser blocked clipboard).", 3200);
+      }
     });
 
     // Start animation loop once (idle until coeffs exist)

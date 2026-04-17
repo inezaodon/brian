@@ -8,9 +8,11 @@ type Props = {
   className?: string;
   width: number;
   height: number;
+  /** Light canvas matches the rest of the airy UI; dark is available for embeds. */
+  theme?: "light" | "dark";
 };
 
-export function FourierVisualizer({ className, width, height }: Props) {
+export function FourierVisualizer({ className, width, height, theme = "light" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const model = useBrianStore((s) => s.model);
   const maxTerms = useBrianStore((s) => s.maxTerms);
@@ -65,7 +67,7 @@ export function FourierVisualizer({ className, width, height }: Props) {
       if (!m) return;
       const w = width;
       const h = height;
-      c.fillStyle = "#06060a";
+      c.fillStyle = theme === "light" ? "#f1f5f9" : "#06060a";
       c.fillRect(0, 0, w, h);
 
       const { minX, minY, maxX, maxY } = boundsForTerms(m, maxTerms);
@@ -97,14 +99,14 @@ export function FourierVisualizer({ className, width, height }: Props) {
           const nx = x + r * Math.cos(angle);
           const ny = y + r * Math.sin(angle);
           if (showCircles && r > 0.4) {
-            c.strokeStyle = "rgba(148, 163, 184, 0.12)";
+            c.strokeStyle = theme === "light" ? "rgba(100, 116, 139, 0.18)" : "rgba(148, 163, 184, 0.12)";
             c.lineWidth = 1;
             c.beginPath();
             c.arc(x, y, r, 0, Math.PI * 2);
             c.stroke();
           }
           if (showVectors) {
-            c.strokeStyle = "rgba(34, 211, 238, 0.22)";
+            c.strokeStyle = theme === "light" ? "rgba(8, 145, 178, 0.28)" : "rgba(34, 211, 238, 0.22)";
             c.lineWidth = 1;
             c.beginPath();
             c.moveTo(x, y);
@@ -129,9 +131,15 @@ export function FourierVisualizer({ className, width, height }: Props) {
           else c.lineTo(p.x, p.y);
         }
         const g = c.createLinearGradient(0, 0, w, h);
-        g.addColorStop(0, "#22d3ee");
-        g.addColorStop(0.45, "#a78bfa");
-        g.addColorStop(1, "#f472b6");
+        if (theme === "light") {
+          g.addColorStop(0, "#0891b2");
+          g.addColorStop(0.45, "#7c3aed");
+          g.addColorStop(1, "#db2777");
+        } else {
+          g.addColorStop(0, "#22d3ee");
+          g.addColorStop(0.45, "#a78bfa");
+          g.addColorStop(1, "#f472b6");
+        }
         c.strokeStyle = g;
         c.lineWidth = lineWidth;
         c.lineJoin = "round";
@@ -143,7 +151,7 @@ export function FourierVisualizer({ className, width, height }: Props) {
     }
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [model, maxTerms, speed, showCircles, showPath, showVectors, lineWidth, scrub, width, height]);
+  }, [model, maxTerms, speed, showCircles, showPath, showVectors, lineWidth, scrub, width, height, theme]);
 
   if (!model) return <div className={className} style={{ width, height }} />;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { imageFileToClosedPath } from "@/lib/imageToPath";
+import { contourPathFromImageFile } from "@/lib/contourFromImage";
 import { useBrianStore } from "@/lib/store";
 import { useState } from "react";
 
@@ -10,6 +10,8 @@ export function Controls() {
   const setMaxTerms = useBrianStore((s) => s.setMaxTerms);
   const speed = useBrianStore((s) => s.speed);
   const setSpeed = useBrianStore((s) => s.setSpeed);
+  const edgeThreshold = useBrianStore((s) => s.edgeThreshold);
+  const setEdgeThreshold = useBrianStore((s) => s.setEdgeThreshold);
   const showCircles = useBrianStore((s) => s.showCircles);
   const setShowCircles = useBrianStore((s) => s.setShowCircles);
   const showPath = useBrianStore((s) => s.showPath);
@@ -24,21 +26,21 @@ export function Controls() {
   const [msg, setMsg] = useState<string | null>(null);
 
   return (
-    <aside className="space-y-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+    <aside className="space-y-6 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
       <div>
-        <label className="text-xs font-medium uppercase tracking-wider text-zinc-500">Terms (N)</label>
+        <label className="text-xs font-medium uppercase tracking-wider text-slate-500">Terms (N)</label>
         <input
           type="range"
           min={8}
           max={320}
           value={maxTerms}
           onChange={(e) => setMaxTerms(+e.target.value)}
-          className="mt-2 w-full accent-cyan-400"
+          className="mt-2 w-full accent-cyan-600"
         />
-        <div className="mt-1 font-mono text-sm text-cyan-200">{maxTerms}</div>
+        <div className="mt-1 font-mono text-sm text-cyan-800">{maxTerms}</div>
       </div>
       <div>
-        <label className="text-xs font-medium uppercase tracking-wider text-zinc-500">Speed</label>
+        <label className="text-xs font-medium uppercase tracking-wider text-slate-500">Speed</label>
         <input
           type="range"
           min={0.2}
@@ -46,12 +48,12 @@ export function Controls() {
           step={0.1}
           value={speed}
           onChange={(e) => setSpeed(+e.target.value)}
-          className="mt-2 w-full accent-violet-400"
+          className="mt-2 w-full accent-violet-600"
         />
-        <div className="mt-1 font-mono text-sm text-violet-200">{speed.toFixed(1)}×</div>
+        <div className="mt-1 font-mono text-sm text-violet-800">{speed.toFixed(1)}×</div>
       </div>
       <div>
-        <label className="text-xs font-medium uppercase tracking-wider text-zinc-500">Line thickness</label>
+        <label className="text-xs font-medium uppercase tracking-wider text-slate-500">Line thickness</label>
         <input
           type="range"
           min={1}
@@ -59,10 +61,28 @@ export function Controls() {
           step={0.5}
           value={lineWidth}
           onChange={(e) => setLineWidth(+e.target.value)}
-          className="mt-2 w-full accent-fuchsia-400"
+          className="mt-2 w-full accent-fuchsia-600"
         />
       </div>
-      <div className="space-y-3 text-sm text-zinc-300">
+      <div>
+        <div className="flex items-baseline justify-between gap-2">
+          <label className="text-xs font-medium uppercase tracking-wider text-slate-500">Edge threshold</label>
+          <span className="font-mono text-xs text-slate-500">{edgeThreshold}</span>
+        </div>
+        <input
+          type="range"
+          min={20}
+          max={255}
+          value={edgeThreshold}
+          onChange={(e) => setEdgeThreshold(+e.target.value)}
+          className="mt-2 w-full accent-emerald-600"
+        />
+        <p className="mt-1 text-[11px] leading-snug text-slate-600">
+          After blur, Sobel magnitudes are split by a sampled percentile (legacy 20–255). Higher → fewer, stronger
+          edges — good for cleaning noisy photos before the largest contour is traced. Applies on the next upload.
+        </p>
+      </div>
+      <div className="space-y-3 text-sm text-slate-700">
         <label className="flex cursor-pointer items-center gap-2">
           <input type="checkbox" checked={showCircles} onChange={(e) => setShowCircles(e.target.checked)} />
           Show circles
@@ -80,7 +100,7 @@ export function Controls() {
         <input
           type="file"
           accept="image/*"
-          className="text-xs text-zinc-400 file:mr-2 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-zinc-200"
+          className="text-xs text-slate-600 file:mr-2 file:rounded-lg file:border-0 file:bg-stone-100 file:px-3 file:py-1.5 file:text-slate-800"
           disabled={busy}
           onChange={async (e) => {
             const f = e.target.files?.[0];
@@ -88,9 +108,13 @@ export function Controls() {
             setBusy(true);
             setMsg(null);
             try {
-              const path = await imageFileToClosedPath(f);
-              setSourcePath(path);
-              setMsg("New path loaded from edges.");
+              const { path, fftOrigin, width, height } = await contourPathFromImageFile(f, {
+                edgeThreshold,
+                maxSide: 240,
+                samplePoints: 320,
+              });
+              setSourcePath(path, { fftOrigin, imageSize: { w: width, h: height } });
+              setMsg("Contour traced (blur → Sobel → percentile mask → greedy chain → DFT).");
             } catch {
               setMsg("Could not read that image.");
             } finally {
@@ -102,7 +126,7 @@ export function Controls() {
         <Button variant="ghost" size="sm" type="button" onClick={() => resetDemo()}>
           Reset professor demo
         </Button>
-        {msg && <p className="font-mono text-xs text-cyan-300/90">{msg}</p>}
+        {msg && <p className="font-mono text-xs text-cyan-800">{msg}</p>}
       </div>
     </aside>
   );

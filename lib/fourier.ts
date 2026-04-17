@@ -1,6 +1,26 @@
 /**
- * Sparse FFT epicycle model — ported from legacy worker logic.
- * Closed path → centered complex samples → radix-2 FFT → magnitude-sorted sparse terms.
+ * Sparse complex FFT epicycle model (legacy `fourier-worker.js` + canvas draw loop).
+ *
+ * ## Signal
+ * A closed curve is sampled at \(N\) points \((x_j,y_j)\) (evenly spaced in **arc length**).
+ * Fix an origin \(O\) (legacy uploads: **image center** \((W/2,H/2)\); demo path: **centroid** of samples).
+ * Complex samples:
+ *
+ * \[ z_j = (x_j - O_x) + i\,(y_j - O_y) \]
+ *
+ * ## Forward transform
+ * Pad \(z_j\) to length \(N_{\mathrm{fft}} = 2^{\lceil \log_2 N\rceil}\) (zero fill), run **radix-2 Cooley–Tukey FFT**
+ * to obtain bins \(\tilde{X}[k]\). Scale **Fourier coefficients** \(c_k = \tilde{X}[k] / N_{\mathrm{fft}}\) (matches the
+ * worker’s `invN` normalization).
+ *
+ * ## Sparse spectrum
+ * Bins are ranked by energy \(|c_k|^2\). Keep the top `sparseCap` indices, then **sort by \(|k|\)** (signed frequency
+ * \(k \in \{-N/2,\ldots,N/2-1\}\)) so epicycles chain from low to high |frequency| for a stable drawing order.
+ *
+ * ## Epicycle synthesis (same as legacy `tick`)
+ * Each kept term is a phasor \(c_k = |c_k| e^{i\varphi_k}\) with \(\varphi_k = \arg(c_k)\). The tip position is
+ * \(O + \sum_k |c_k| \cos(\omega_k t + \varphi_k)\) in \(x\) and similarly in \(y\), with \(\omega_k = k\) in the
+ * code’s time parameter (the UI scales \(t\) per frame via `refN ≈ fftN`).
  */
 
 export type Point2 = { x: number; y: number };
@@ -137,22 +157,35 @@ export function resampleByArcLength(pts: Point2[], M: number): Point2[] {
   return out;
 }
 
-/** Centroid + closed path → centered complex signal + sparse Fourier model. */
+/**
+ * Closed path → complex samples → sparse FFT model.
+ *
+ * @param fftOrigin If set, subtract this point from each sample (legacy image uploads use the **image center**).
+ *                  If omitted, subtract the **centroid of the arc-length-resampled** polyline (good for synthetic demo paths).
+ */
 export function buildFourierModel(
   closedPath: Point2[],
   sampleCount: number,
   sparseCap: number,
+  fftOrigin?: Point2,
 ): FourierModel {
   const sampled = resampleByArcLength(closedPath, sampleCount);
-  let sx = 0;
-  let sy = 0;
-  for (const p of sampled) {
-    sx += p.x;
-    sy += p.y;
-  }
   const n = sampled.length;
-  const cx = sx / n;
-  const cy = sy / n;
+  let cx: number;
+  let cy: number;
+  if (fftOrigin) {
+    cx = fftOrigin.x;
+    cy = fftOrigin.y;
+  } else {
+    let sx = 0;
+    let sy = 0;
+    for (const p of sampled) {
+      sx += p.x;
+      sy += p.y;
+    }
+    cx = sx / n;
+    cy = sy / n;
+  }
   const zRe = new Float32Array(n);
   const zIm = new Float32Array(n);
   for (let i = 0; i < n; i++) {

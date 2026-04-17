@@ -34,7 +34,7 @@ function Ribbon() {
 
   return (
     <group ref={group}>
-      <Line points={points} color="#67e8f9" lineWidth={1.8} transparent opacity={0.95} />
+      <Line points={points} color="#0e7490" lineWidth={1.8} transparent opacity={0.92} />
     </group>
   );
 }
@@ -43,17 +43,17 @@ export function EpicycleWow3D() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-24">
       <div className="text-center">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-cyan-300/70">Wow feature</p>
-        <h2 className="mt-2 font-heading text-3xl font-bold text-white sm:text-4xl">3D ribbon of the same curve</h2>
-        <p className="mx-auto mt-3 max-w-xl text-sm text-zinc-500">
+        <p className="font-mono text-xs uppercase tracking-[0.3em] text-cyan-800/80">Wow feature</p>
+        <h2 className="mt-2 font-heading text-3xl font-bold text-slate-900 sm:text-4xl">3D ribbon of the same curve</h2>
+        <p className="mx-auto mt-3 max-w-xl text-sm text-slate-600">
           The identical Fourier trace, extruded with a sine wave in Z and orbiting slowly — math as sculpture.
         </p>
       </div>
-      <div className="mt-8 h-[min(70vh,560px)] w-full overflow-hidden rounded-2xl border border-white/10 bg-[#050508] shadow-[0_0_80px_rgba(34,211,238,0.12)]">
+      <div className="mt-8 h-[min(70vh,560px)] w-full overflow-hidden rounded-2xl border border-stone-200 bg-slate-100 shadow-md shadow-slate-300/40">
         <Canvas camera={{ position: [0, 0, 9], fov: 45 }} gl={{ antialias: true, alpha: false }}>
-          <color attach="background" args={["#050508"]} />
-          <ambientLight intensity={0.35} />
-          <pointLight position={[10, 10, 10]} intensity={0.8} color="#a5f3fc" />
+          <color attach="background" args={["#e8eef7"]} />
+          <ambientLight intensity={0.55} />
+          <pointLight position={[10, 10, 10]} intensity={0.65} color="#38bdf8" />
           <Ribbon />
           <OrbitControls enableDamping dampingFactor={0.06} />
         </Canvas>

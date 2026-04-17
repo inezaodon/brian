@@ -55,33 +55,33 @@ export function CompareSection() {
         initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="font-heading text-center text-3xl font-bold text-white sm:text-4xl"
+        className="font-heading text-center text-3xl font-bold text-slate-900 sm:text-4xl"
       >
         Side by side
       </motion.h2>
-      <p className="mx-auto mt-3 max-w-lg text-center text-sm text-zinc-500">
+      <p className="mx-auto mt-3 max-w-lg text-center text-sm text-slate-600">
         Original sampled loop vs Fourier reconstruction. Drag the slider to favor one side.
       </p>
       <div className="mt-10 grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-          <div className="text-center font-mono text-xs text-zinc-500">Source path</div>
-          <svg viewBox="0 0 100 100" className="mt-2 h-64 w-full text-emerald-400/80">
+        <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+          <div className="text-center font-mono text-xs text-slate-500">Source path</div>
+          <svg viewBox="0 0 100 100" className="mt-2 h-64 w-full text-emerald-700/90">
             <path d={sourceSvg} fill="none" stroke="currentColor" strokeWidth="0.5" />
           </svg>
         </div>
-        <div className="relative rounded-2xl border border-white/10 bg-black/40 p-4">
-          <div className="text-center font-mono text-xs text-zinc-500">Fourier trace</div>
-          <svg viewBox="0 0 100 100" className="mt-2 h-64 w-full text-cyan-400/90">
+        <div className="relative rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+          <div className="text-center font-mono text-xs text-slate-500">Fourier trace</div>
+          <svg viewBox="0 0 100 100" className="mt-2 h-64 w-full text-cyan-700/90">
             <path d={fourierSvg} fill="none" stroke="currentColor" strokeWidth="0.55" />
           </svg>
           <div
-            className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent to-black/70"
+            className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent to-white/85"
             style={{ opacity: 1 - blend }}
           />
         </div>
       </div>
       <div className="mx-auto mt-8 max-w-md">
-        <label className="text-xs text-zinc-500">Compare blend</label>
+        <label className="text-xs text-slate-600">Compare blend</label>
         <input
           type="range"
           min={0}
@@ -89,7 +89,7 @@ export function CompareSection() {
           step={0.01}
           value={blend}
           onChange={(e) => setBlend(+e.target.value)}
-          className="mt-2 w-full accent-cyan-400"
+          className="mt-2 w-full accent-cyan-600"
         />
       </div>
     </section>

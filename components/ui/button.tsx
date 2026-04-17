@@ -3,15 +3,15 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 disabled:pointer-events-none disabled:opacity-40",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 disabled:pointer-events-none disabled:opacity-40",
   {
     variants: {
       variant: {
         default:
-          "bg-gradient-to-r from-cyan-400 via-violet-500 to-fuchsia-500 text-[#0a0a0a] shadow-[0_0_32px_rgba(34,211,238,0.35)] hover:brightness-110 hover:shadow-[0_0_48px_rgba(167,139,250,0.45)]",
+          "bg-gradient-to-r from-cyan-500 via-violet-500 to-fuchsia-500 text-white shadow-md shadow-cyan-500/20 hover:brightness-[1.03] hover:shadow-lg hover:shadow-violet-500/25",
         ghost:
-          "border border-white/10 bg-white/5 text-zinc-200 hover:bg-white/10 hover:border-white/20",
-        outline: "border border-cyan-400/40 text-cyan-200 hover:bg-cyan-400/10",
+          "border border-stone-200 bg-white text-slate-700 shadow-sm hover:border-stone-300 hover:bg-stone-50",
+        outline: "border border-cyan-600/35 text-cyan-900 hover:bg-cyan-50",
       },
       size: {
         default: "h-11 px-6",

@@ -13,11 +13,15 @@ export function Playground() {
         viewport={{ once: true }}
         className="text-center"
       >
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-cyan-300/70">Playground</p>
-        <h2 className="mt-2 font-heading text-3xl font-bold text-white sm:text-4xl">Twist the prank in real time</h2>
-        <p className="mx-auto mt-3 max-w-lg text-sm text-zinc-500">
-          Terms, speed, toggles, stroke — everything hot-swaps. Optional upload runs a quick edge trace (works best on
-          bold portraits).
+        <p className="font-mono text-xs uppercase tracking-[0.3em] text-cyan-800/80">Playground</p>
+        <h2 className="mt-2 font-heading text-3xl font-bold text-slate-900 sm:text-4xl">Twist the prank in real time</h2>
+        <p className="mx-auto mt-3 max-w-lg text-sm text-slate-600">
+          Terms, speed, toggles, stroke — everything hot-swaps. Uploads use the same blur → Sobel → adaptive mask →
+          8-connected contour → greedy ordering as the original worker (largest blob, then arc-length resample).{" "}
+          <a href="#export" className="font-medium text-cyan-800 underline-offset-2 hover:underline">
+            Desmos export &amp; plain text
+          </a>{" "}
+          are in the next section.
         </p>
       </motion.div>
 
@@ -26,9 +30,9 @@ export function Playground() {
           initial={{ opacity: 0, scale: 0.98 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="flex min-h-[360px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/30 p-4"
+          className="flex min-h-[360px] items-center justify-center overflow-hidden rounded-2xl border border-stone-200 bg-white p-4 shadow-sm"
         >
-          <FourierVisualizer width={560} height={400} className="max-w-full" />
+          <FourierVisualizer width={560} height={400} theme="light" className="max-w-full rounded-lg" />
         </motion.div>
         <Controls />
       </div>

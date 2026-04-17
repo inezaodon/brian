@@ -11,8 +11,10 @@ type BrianState = {
   model: FourierModel | null;
   /** Public path or blob: URL for the raster shown next to traces. */
   originalImageSrc: string | null;
-  /** PNG data URL from Sobel line-art step (same worker recipe). */
+  /** PNG data URL from OpenCV neon pipeline (`/api/neon_lineart`). */
   lineArtDataUrl: string | null;
+  /** PNG data URL: browser Sobel-percentile edge mask (same raster used to trace the DFT loop). */
+  edgeMaskDataUrl: string | null;
   /** Set after raster upload — echoed in Desmos export header (legacy worker size). */
   lastImageSize: { w: number; h: number } | null;
   /** Used for the next image upload (legacy worker default ≈ 105). */
@@ -33,13 +35,14 @@ type BrianState = {
   setLineWidth: (w: number) => void;
   setScrub: (s: number) => void;
   setOriginalImageSrc: (src: string | null) => void;
-  /** Pass `fftOrigin` / `imageSize` / `lineArtDataUrl` (OpenCV `/api/neon_lineart` only; null if unavailable). */
+  /** Pass `fftOrigin` / `imageSize` / `lineArtDataUrl` / `edgeMaskDataUrl`. */
   setSourcePath: (
     path: Point2[],
     options?: {
       fftOrigin?: Point2;
       imageSize?: { w: number; h: number } | null;
       lineArtDataUrl?: string | null;
+      edgeMaskDataUrl?: string | null;
     },
   ) => void;
   resetDemo: () => void;
@@ -56,6 +59,7 @@ export const useBrianStore = create<BrianState>((set, get) => ({
   model: computeModel(demo),
   originalImageSrc: null,
   lineArtDataUrl: null,
+  edgeMaskDataUrl: null,
   lastImageSize: null,
   edgeThreshold: 105,
   maxTerms: 120,
@@ -83,7 +87,7 @@ export const useBrianStore = create<BrianState>((set, get) => ({
   setSourcePath: (path, options) => {
     const model = computeModel(path, options?.fftOrigin);
     const patch: Partial<
-      Pick<BrianState, "sourcePath" | "model" | "lastImageSize" | "lineArtDataUrl">
+      Pick<BrianState, "sourcePath" | "model" | "lastImageSize" | "lineArtDataUrl" | "edgeMaskDataUrl">
     > = {
       sourcePath: path,
       model,
@@ -93,6 +97,9 @@ export const useBrianStore = create<BrianState>((set, get) => ({
     }
     if (options && "lineArtDataUrl" in options) {
       patch.lineArtDataUrl = options.lineArtDataUrl ?? null;
+    }
+    if (options && "edgeMaskDataUrl" in options) {
+      patch.edgeMaskDataUrl = options.edgeMaskDataUrl ?? null;
     }
     set(patch);
   },

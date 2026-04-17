@@ -22,11 +22,12 @@ export async function reloadDefaultPortrait(): Promise<void> {
     }),
     fetchOpenCvNeonLineartAsDataUrl(file),
   ]);
-  const { path, fftOrigin, width, height } = contour;
+  const { path, fftOrigin, width, height, edgeMaskDataUrl } = contour;
   useBrianStore.getState().setSourcePath(path, {
     fftOrigin,
     imageSize: { w: width, h: height },
     lineArtDataUrl: openCvLineArt,
+    edgeMaskDataUrl,
   });
   useBrianStore.getState().setOriginalImageSrc(DEFAULT_PORTRAIT_PUBLIC_PATH);
 }

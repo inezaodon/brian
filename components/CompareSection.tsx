@@ -61,8 +61,8 @@ export function CompareSection() {
         Original vs pipeline vs sketch
       </motion.h2>
       <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-slate-600">
-        Same order as the static studio: raster in, Sobel line art, resampled contour that the DFT sees, then the
-        Fourier trace with your current term cap.
+        Raster in, OpenCV neon preview (when available), the resampled loop the DFT actually uses, then the Fourier
+        trace with your current term cap.
       </p>
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -79,7 +79,7 @@ export function CompareSection() {
         </div>
         <div className="rounded-2xl border border-stone-200 bg-slate-950 p-3 shadow-sm">
           <div className="text-center font-mono text-[10px] uppercase tracking-wider text-slate-400">
-            2 · Line art (enhanced)
+            2 · Line art (OpenCV)
           </div>
           <div className="mt-2 flex aspect-square max-h-64 items-center justify-center">
             {lineArtDataUrl ? (

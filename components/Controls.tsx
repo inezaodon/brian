@@ -121,11 +121,12 @@ export function Controls() {
                 }),
                 fetchOpenCvNeonLineartAsDataUrl(f),
               ]);
-              const { path, fftOrigin, width, height } = contour;
+              const { path, fftOrigin, width, height, edgeMaskDataUrl } = contour;
               setSourcePath(path, {
                 fftOrigin,
                 imageSize: { w: width, h: height },
                 lineArtDataUrl: openCvLineArt,
+                edgeMaskDataUrl,
               });
               setMsg(
                 openCvLineArt

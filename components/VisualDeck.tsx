@@ -10,32 +10,15 @@ export type DeckKey = "sketch" | "contour" | "line" | "image";
 
 const META: Record<DeckKey, { title: string; subtle: string }> = {
   sketch: { title: "Sketch", subtle: "Epicycle trace (Fourier sum)" },
-  contour: { title: "Contour", subtle: "Binary mask used for FFT paths" },
-  line: { title: "Line art", subtle: "Neon Sobel preview (shape-first)" },
-  image: { title: "Image", subtle: "Scaled input · pipeline, then path overlay" },
+  contour: { title: "Contour", subtle: "Sobel edge mask + DFT loop (same tracing as FFT)" },
+  line: { title: "Line art", subtle: "OpenCV neon (Canny contours — preview only)" },
+  image: { title: "Image", subtle: "Scaled input + DFT path in image coordinates" },
 };
 
-function pathToSvgD(path: { x: number; y: number }[], close: boolean) {
+/** Path in raster pixel coordinates (matches `lastImageSize` / edge mask). */
+function pathToSvgPixelD(path: { x: number; y: number }[], close: boolean) {
   if (!path.length) return "";
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const p of path) {
-    minX = Math.min(minX, p.x);
-    minY = Math.min(minY, p.y);
-    maxX = Math.max(maxX, p.x);
-    maxY = Math.max(maxY, p.y);
-  }
-  const bw = maxX - minX || 1;
-  const bh = maxY - minY || 1;
-  const s = 82 / Math.max(bw, bh);
-  const pts: string[] = [];
-  path.forEach((p, i) => {
-    const x = 50 + (p.x - (minX + maxX) / 2) * s;
-    const y = 50 + (p.y - (minY + maxY) / 2) * s;
-    pts.push(`${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`);
-  });
+  const pts = path.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(2)},${p.y.toFixed(2)}`);
   return pts.join(" ") + (close ? " Z" : "");
 }
 
@@ -95,7 +78,9 @@ function DeckCard({
           </button>
         </div>
       </div>
-      <div className="relative flex min-h-[280px] flex-1 items-center justify-center p-3 sm:min-h-[300px]">{children}</div>
+      <div className="relative flex min-h-[280px] flex-1 items-center justify-center overflow-y-auto p-3 sm:min-h-[300px]">
+        {children}
+      </div>
     </motion.article>
   );
 }
@@ -105,8 +90,13 @@ export function VisualDeck() {
   const sourcePath = useBrianStore((s) => s.sourcePath);
   const originalImageSrc = useBrianStore((s) => s.originalImageSrc);
   const lineArtDataUrl = useBrianStore((s) => s.lineArtDataUrl);
+  const edgeMaskDataUrl = useBrianStore((s) => s.edgeMaskDataUrl);
+  const lastImageSize = useBrianStore((s) => s.lastImageSize);
 
-  const sourceD = useMemo(() => pathToSvgD(sourcePath, true), [sourcePath]);
+  const pathPixelD = useMemo(() => pathToSvgPixelD(sourcePath, true), [sourcePath]);
+  const procW = lastImageSize?.w ?? 0;
+  const procH = lastImageSize?.h ?? 0;
+  const hasProcSize = procW > 0 && procH > 0;
 
   function swap(key: DeckKey, dir: -1 | 1) {
     setOrder((o) => {
@@ -138,11 +128,37 @@ export function VisualDeck() {
           )}
           {key === "contour" && (
             <div className="flex h-full w-full flex-col items-center justify-center bg-emerald-50/60">
-              <svg viewBox="0 0 100 100" className="h-52 w-full max-w-sm text-emerald-700/85" aria-hidden>
-                <rect x="0" y="0" width="100" height="100" fill="#ecfdf5" />
-                {sourceD ? (
-                  <path d={sourceD} fill="none" stroke="currentColor" strokeWidth="0.55" />
-                ) : (
+              {edgeMaskDataUrl && hasProcSize ? (
+                <div
+                  className="relative w-full max-w-sm overflow-hidden rounded-lg border border-emerald-200/90 bg-emerald-950 shadow-inner"
+                  style={{ aspectRatio: `${procW} / ${procH}` }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={edgeMaskDataUrl}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-contain"
+                  />
+                  {pathPixelD ? (
+                    <svg
+                      viewBox={`0 0 ${procW} ${procH}`}
+                      className="pointer-events-none absolute inset-0 h-full w-full text-cyan-300"
+                      preserveAspectRatio="xMidYMid meet"
+                      aria-hidden
+                    >
+                      <path
+                        d={pathPixelD}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={Math.max(1.2, Math.min(procW, procH) * 0.006)}
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </svg>
+                  ) : null}
+                </div>
+              ) : (
+                <svg viewBox="0 0 100 100" className="h-52 w-full max-w-sm text-emerald-700/85" aria-hidden>
+                  <rect x="0" y="0" width="100" height="100" fill="#ecfdf5" />
                   <path
                     d="M30 50 L70 50 M50 30 L50 70"
                     fill="none"
@@ -150,10 +166,11 @@ export function VisualDeck() {
                     strokeWidth="0.35"
                     strokeDasharray="2 2"
                   />
-                )}
-              </svg>
+                </svg>
+              )}
               <p className="mt-2 px-4 text-center text-[11px] text-slate-600">
-                Edge mask topology — largest 8-connected blob, greedy walk, then resample.
+                White pixels: Sobel magnitude ≥ percentile mask. Cyan: resampled loop from the largest 8-connected blob
+                (DFT input). Line art uses a separate OpenCV pipeline, so shapes can differ.
               </p>
             </div>
           )}
@@ -163,52 +180,55 @@ export function VisualDeck() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={lineArtDataUrl}
-                  alt="Sobel magnitude as neon line art"
+                  alt="OpenCV neon line art"
                   className="h-full max-h-56 w-full max-w-sm object-contain"
                 />
               ) : (
                 <div className="flex h-48 w-full items-center justify-center bg-slate-800 text-xs text-slate-400">
-                  Line art preview loads with the portrait…
+                  Line art preview loads when OpenCV `/api/neon_lineart` succeeds…
                 </div>
               )}
               <p className="absolute bottom-2 left-2 right-2 text-center text-[11px] text-slate-300">
-                Sobel on simplified gray → non-max suppression → contrast stretch → dual-radius bloom → unsharp →
-                neon grade (supersampled when small).
+                OpenCV: blur → Canny (or Sobel) → findContours → glow composite. Decorative preview — not the same mask
+                as the DFT contour.
               </p>
             </div>
           )}
           {key === "image" && (
             <div className="relative flex h-full w-full flex-col items-stretch justify-center overflow-hidden rounded-xl border border-stone-200 bg-stone-900/5">
               {originalImageSrc ? (
-                <div className="relative mx-auto aspect-square w-full max-w-sm">
+                <div
+                  className="relative mx-auto w-full max-w-sm"
+                  style={hasProcSize ? { aspectRatio: `${procW} / ${procH}` } : { minHeight: "12rem" }}
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={originalImageSrc}
                     alt="Input image scaled for processing"
-                    className="h-full w-full rounded-lg object-contain"
+                    className="absolute inset-0 h-full w-full rounded-lg object-contain"
                   />
-                  <svg
-                    viewBox="0 0 100 100"
-                    className="pointer-events-none absolute inset-0 h-full w-full"
-                    preserveAspectRatio="xMidYMid meet"
-                    aria-hidden
-                  >
-                    {sourceD && (
+                  {pathPixelD && hasProcSize ? (
+                    <svg
+                      viewBox={`0 0 ${procW} ${procH}`}
+                      className="pointer-events-none absolute inset-0 h-full w-full"
+                      preserveAspectRatio="xMidYMid meet"
+                      aria-hidden
+                    >
                       <path
-                        d={sourceD}
+                        d={pathPixelD}
                         fill="none"
-                        stroke="rgba(34,211,238,0.85)"
-                        strokeWidth="0.55"
+                        stroke="rgba(34,211,238,0.9)"
+                        strokeWidth={Math.max(1.2, Math.min(procW, procH) * 0.006)}
                         vectorEffect="non-scaling-stroke"
                       />
-                    )}
-                  </svg>
+                    </svg>
+                  ) : null}
                 </div>
               ) : (
                 <p className="p-6 text-center text-xs text-slate-500">Original image appears after the portrait loads…</p>
               )}
               <p className="mt-2 px-4 pb-2 text-center text-[11px] text-slate-600">
-                Scaled raster + traced loop overlay (same path fed to the FFT).
+                Raster at processing aspect ratio; cyan overlay is the same resampled loop passed to the FFT.
               </p>
             </div>
           )}

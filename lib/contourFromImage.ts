@@ -38,6 +38,8 @@ export type ContourFromImageResult = {
   fftOrigin: Point2;
   width: number;
   height: number;
+  /** PNG data URL: Sobel magnitude ≥ percentile (white = edge pixels before largest-blob pick). */
+  edgeMaskDataUrl: string;
 };
 
 const DX8 = [-1, 0, 1, -1, 1, -1, 0, 1];
@@ -216,6 +218,22 @@ function orderComponentGreedy(pts: Pixel[]): Pixel[] {
   return ordered;
 }
 
+function binaryEdgesToDataUrl(edges: Uint8Array, w: number, h: number): string {
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+  const buf = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0, p = 0; i < edges.length; i++, p += 4) {
+    const v = edges[i];
+    buf[p] = buf[p + 1] = buf[p + 2] = v;
+    buf[p + 3] = 255;
+  }
+  ctx.putImageData(new ImageData(buf, w, h), 0, 0);
+  return canvas.toDataURL("image/png");
+}
+
 function fallbackCirclePath(w: number, h: number, samplePoints: number): Point2[] {
   const cx = w / 2;
   const cy = h / 2;
@@ -264,6 +282,8 @@ export async function contourPathFromImageFile(
   components.sort((a, b) => b.pixels.length - a.pixels.length);
   const fftOrigin: Point2 = { x: w / 2, y: h / 2 };
 
+  const edgeMaskDataUrl = binaryEdgesToDataUrl(edges, w, h);
+
   const selected = components.find((c) => c.pixels.length >= 8);
   if (!selected) {
     return {
@@ -271,10 +291,11 @@ export async function contourPathFromImageFile(
       fftOrigin,
       width: w,
       height: h,
+      edgeMaskDataUrl,
     };
   }
 
   const ordered = orderComponentGreedy(selected.pixels);
   const path = resampleByArcLength(ordered, samplePoints);
-  return { path, fftOrigin, width: w, height: h };
+  return { path, fftOrigin, width: w, height: h, edgeMaskDataUrl };
 }

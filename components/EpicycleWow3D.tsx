@@ -49,13 +49,18 @@ export function EpicycleWow3D() {
           The identical Fourier trace, extruded with a sine wave in Z and orbiting slowly — math as sculpture.
         </p>
       </div>
-      <div className="mt-8 h-[min(70vh,560px)] w-full overflow-hidden rounded-2xl border border-stone-200 bg-slate-100 shadow-md shadow-slate-300/40">
-        <Canvas camera={{ position: [0, 0, 9], fov: 45 }} gl={{ antialias: true, alpha: false }}>
+      <div className="mt-8 h-[min(70vh,560px)] w-full overflow-hidden rounded-2xl border border-stone-200 bg-slate-100 shadow-md shadow-slate-300/40 touch-pan-y">
+        <Canvas
+          className="touch-pan-y"
+          camera={{ position: [0, 0, 9], fov: 45 }}
+          gl={{ antialias: true, alpha: false }}
+        >
           <color attach="background" args={["#e8eef7"]} />
           <ambientLight intensity={0.55} />
           <pointLight position={[10, 10, 10]} intensity={0.65} color="#38bdf8" />
           <Ribbon />
-          <OrbitControls enableDamping dampingFactor={0.06} />
+          {/* Wheel zoom captures scroll; keep orbit + pan only so the page can scroll past this section. */}
+          <OrbitControls enableDamping dampingFactor={0.06} enableZoom={false} />
         </Canvas>
       </div>
     </section>

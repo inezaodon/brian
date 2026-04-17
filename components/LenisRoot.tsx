@@ -1,22 +1,20 @@
 "use client";
 
 import Lenis from "lenis";
+import "lenis/dist/lenis.css";
 import { useEffect } from "react";
 
 export function LenisRoot({ children }: { children: React.ReactNode }) {
   useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("lenis");
     const lenis = new Lenis({
       smoothWheel: true,
       lerp: 0.12,
+      autoRaf: true,
     });
-    let raf = 0;
-    function frame(t: number) {
-      lenis.raf(t);
-      raf = requestAnimationFrame(frame);
-    }
-    raf = requestAnimationFrame(frame);
     return () => {
-      cancelAnimationFrame(raf);
+      root.classList.remove("lenis");
       lenis.destroy();
     };
   }, []);

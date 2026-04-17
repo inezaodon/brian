@@ -77,8 +77,7 @@ export function MathCore() {
           Luminance first, then three separable box-blur passes (radius 2) blended back as{" "}
           <span className="font-mono text-slate-800">0.62·blur + 0.38·raw</span> — matching your{" "}
           <span className="font-mono text-slate-800">Downloads/fourier-worker.js</span>. Sobel filters estimate gradients
-          (the neon line-art panel adds NMS, tone mapping, bloom, and color grading on that same simplified field). We
-          threshold{" "}
+          on that simplified field; the separate neon line-art preview is OpenCV on the server. We threshold{" "}
           <span className="font-mono text-slate-800">|∇I|</span> with a <em>percentile</em> cutoff (your edge slider maps
           into that percentile exactly like the old worker). The largest 8-connected foreground blob is chained by
           greedy nearest-neighbor order and resampled uniformly in arc length to get{" "}

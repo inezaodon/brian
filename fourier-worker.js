@@ -74,22 +74,88 @@ function connectedEdgeComponents(edges, w, h) {
   return out;
 }
 
+function nextPow2(n) {
+  let p = 1;
+  while (p < n) p <<= 1;
+  return p;
+}
+
 /**
- * Order pixels of one component by polar angle around their centroid (separate loop per blob).
+ * Build a mostly continuous ordering by greedily visiting nearest unvisited pixel.
+ * For sparse edge components this is much better than centroid-angle sorting.
  */
-function sortByAngleAroundCentroid(pts) {
-  if (pts.length === 0) return [];
-  let cx = 0;
-  let cy = 0;
-  for (const p of pts) {
-    cx += p.x;
-    cy += p.y;
+function orderComponentGreedy(pts) {
+  if (pts.length <= 2) return pts.slice();
+  const used = new Uint8Array(pts.length);
+  let startIdx = 0;
+  for (let i = 1; i < pts.length; i++) {
+    if (pts[i].x < pts[startIdx].x) startIdx = i;
   }
-  cx /= pts.length;
-  cy /= pts.length;
-  return pts.slice().sort(
-    (a, b) => Math.atan2(a.y - cy, a.x - cx) - Math.atan2(b.y - cy, b.x - cx)
-  );
+  const ordered = [];
+  let curIdx = startIdx;
+  used[curIdx] = 1;
+  ordered.push(pts[curIdx]);
+  for (let step = 1; step < pts.length; step++) {
+    let best = -1;
+    let bestD2 = Infinity;
+    const cx = pts[curIdx].x;
+    const cy = pts[curIdx].y;
+    for (let j = 0; j < pts.length; j++) {
+      if (used[j]) continue;
+      const dx = pts[j].x - cx;
+      const dy = pts[j].y - cy;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < bestD2) {
+        bestD2 = d2;
+        best = j;
+      }
+    }
+    if (best < 0) break;
+    used[best] = 1;
+    ordered.push(pts[best]);
+    curIdx = best;
+  }
+  return ordered;
+}
+
+/**
+ * Resample an ordered polyline to M equally spaced arc-length points (closed loop).
+ */
+function resampleByArcLength(pts, M) {
+  const n = pts.length;
+  if (n === 0 || M <= 0) return [];
+  if (n === 1) return Array.from({ length: M }, () => ({ x: pts[0].x, y: pts[0].y }));
+
+  const segLens = new Float32Array(n);
+  let total = 0;
+  for (let i = 0; i < n; i++) {
+    const a = pts[i];
+    const b = pts[(i + 1) % n];
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    segLens[i] = len;
+    total += len;
+  }
+  if (total <= 1e-6) return pts.slice(0, Math.min(M, pts.length));
+
+  const out = [];
+  let seg = 0;
+  let segStart = 0;
+  for (let m = 0; m < M; m++) {
+    const target = (m / M) * total;
+    while (seg < n - 1 && segStart + segLens[seg] < target) {
+      segStart += segLens[seg];
+      seg++;
+    }
+    const a = pts[seg];
+    const b = pts[(seg + 1) % n];
+    const len = Math.max(1e-6, segLens[seg]);
+    const u = (target - segStart) / len;
+    out.push({
+      x: a.x + (b.x - a.x) * u,
+      y: a.y + (b.y - a.y) * u,
+    });
+  }
+  return out;
 }
 
 /**
@@ -105,36 +171,83 @@ function subsampleOrdered(pts, maxPts) {
 }
 
 /**
- * Full complex DFT of z[n] = re[n] + i im[n].
- * X[k] = (1/N) sum_n z[n] e^{-i 2π k n / N}
- * Reports progress by chunking the outer k loop.
+ * Iterative radix-2 Cooley-Tukey FFT (in-place arrays).
  */
-function dftComplexProgress(zRe, zIm, reportEvery, onProgress) {
-  const N = zRe.length;
-  const outRe = new Float32Array(N);
-  const outIm = new Float32Array(N);
-  const invN = 1 / N;
-  const twoPiOverN = (2 * Math.PI) / N;
-
-  for (let k = 0; k < N; k++) {
-    let sumRe = 0;
-    let sumIm = 0;
-    for (let n = 0; n < N; n++) {
-      const angle = -twoPiOverN * k * n;
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      const zr = zRe[n];
-      const zi = zIm[n];
-      sumRe += zr * cos - zi * sin;
-      sumIm += zr * sin + zi * cos;
+function fftComplexInPlace(re, im) {
+  const N = re.length;
+  let j = 0;
+  for (let i = 1; i < N; i++) {
+    let bit = N >> 1;
+    while (j & bit) {
+      j ^= bit;
+      bit >>= 1;
     }
-    outRe[k] = sumRe * invN;
-    outIm[k] = sumIm * invN;
-    if (k % reportEvery === 0 || k === N - 1) {
-      onProgress(0.65 + (0.3 * (k + 1)) / N);
+    j ^= bit;
+    if (i < j) {
+      const tr = re[i];
+      re[i] = re[j];
+      re[j] = tr;
+      const ti = im[i];
+      im[i] = im[j];
+      im[j] = ti;
     }
   }
-  return { outRe, outIm };
+
+  for (let len = 2; len <= N; len <<= 1) {
+    const half = len >> 1;
+    const ang = (-2 * Math.PI) / len;
+    const wLenRe = Math.cos(ang);
+    const wLenIm = Math.sin(ang);
+    for (let i = 0; i < N; i += len) {
+      let wRe = 1;
+      let wIm = 0;
+      for (let j2 = 0; j2 < half; j2++) {
+        const uRe = re[i + j2];
+        const uIm = im[i + j2];
+        const vRe = re[i + j2 + half] * wRe - im[i + j2 + half] * wIm;
+        const vIm = re[i + j2 + half] * wIm + im[i + j2 + half] * wRe;
+        re[i + j2] = uRe + vRe;
+        im[i + j2] = uIm + vIm;
+        re[i + j2 + half] = uRe - vRe;
+        im[i + j2 + half] = uIm - vIm;
+        const nwRe = wRe * wLenRe - wIm * wLenIm;
+        const nwIm = wRe * wLenIm + wIm * wLenRe;
+        wRe = nwRe;
+        wIm = nwIm;
+      }
+    }
+  }
+}
+
+function sparseTermsFromFft(zRe, zIm, topK) {
+  const N = nextPow2(zRe.length);
+  const re = new Float32Array(N);
+  const im = new Float32Array(N);
+  re.set(zRe);
+  im.set(zIm);
+  fftComplexInPlace(re, im);
+
+  const invN = 1 / N;
+  const freqs = [];
+  for (let k = 0; k < N; k++) freqs.push(k <= N / 2 ? k : k - N);
+  const order = Array.from({ length: N }, (_, i) => i).sort((a, b) => {
+    const ma = re[a] * re[a] + im[a] * im[a];
+    const mb = re[b] * re[b] + im[b] * im[b];
+    return mb - ma;
+  });
+  const keep = order.slice(0, Math.min(topK, N));
+  keep.sort((a, b) => Math.abs(freqs[a]) - Math.abs(freqs[b]));
+
+  const outFreq = new Int16Array(keep.length);
+  const outRe = new Float32Array(keep.length);
+  const outIm = new Float32Array(keep.length);
+  for (let i = 0; i < keep.length; i++) {
+    const k = keep[i];
+    outFreq[i] = freqs[k];
+    outRe[i] = re[k] * invN;
+    outIm[i] = im[k] * invN;
+  }
+  return { fftN: N, outFreq, outRe, outIm };
 }
 
 self.onmessage = (e) => {
@@ -189,8 +302,8 @@ self.onmessage = (e) => {
     const progressSpan = 0.45;
 
     for (const comp of selected) {
-      const ordered = sortByAngleAroundCentroid(comp.pixels);
-      const pts = subsampleOrdered(ordered, perPathMax);
+      const ordered = orderComponentGreedy(comp.pixels);
+      const pts = resampleByArcLength(ordered, perPathMax);
       const N = pts.length;
       const zRe = new Float32Array(N);
       const zIm = new Float32Array(N);
@@ -199,33 +312,33 @@ self.onmessage = (e) => {
         zIm[i] = pts[i].y - cy;
       }
 
-      const reportEvery = Math.max(1, Math.floor(N / 20));
       const fracStart = progressBase + (progressSpan * pathIndex) / totalPaths;
       const fracEnd = progressBase + (progressSpan * (pathIndex + 1)) / totalPaths;
-
-      const { outRe, outIm } = dftComplexProgress(zRe, zIm, reportEvery, (p) => {
-        const inner = (p - 0.65) / 0.3;
-        const local = Math.max(0, Math.min(1, inner));
-        const pct = 100 * (fracStart + (fracEnd - fracStart) * local);
-        self.postMessage({
-          type: "progress",
-          percent: Math.min(99, pct),
-          stage: `DFT path ${pathIndex + 1}/${totalPaths}…`,
-        });
+      self.postMessage({
+        type: "progress",
+        percent: 100 * fracStart,
+        stage: `FFT path ${pathIndex + 1}/${totalPaths}…`,
       });
 
       const termCap = Math.min(
         PATH_TERM_CAPS[pathIndex] != null ? PATH_TERM_CAPS[pathIndex] : 40,
-        N
+        nextPow2(N)
       );
+      const { fftN, outFreq, outRe, outIm } = sparseTermsFromFft(zRe, zIm, termCap);
+      self.postMessage({
+        type: "progress",
+        percent: Math.min(99, 100 * fracEnd),
+        stage: `FFT path ${pathIndex + 1}/${totalPaths} done`,
+      });
       pathsOut.push({
-        N,
+        N: fftN,
         pointCount: N,
         termCap,
+        freqs: outFreq,
         coeffsRe: outRe,
         coeffsIm: outIm,
       });
-      transfers.push(outRe.buffer, outIm.buffer);
+      transfers.push(outFreq.buffer, outRe.buffer, outIm.buffer);
       pathIndex += 1;
     }
 
@@ -242,6 +355,7 @@ self.onmessage = (e) => {
           N: p.N,
           pointCount: p.pointCount,
           termCap: p.termCap,
+          freqs: p.freqs,
           coeffsRe: p.coeffsRe,
           coeffsIm: p.coeffsIm,
         })),

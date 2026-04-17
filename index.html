@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fourier Epicycle Portrait</title>
+  <style>
+    :root {
+      --bg: #0e1117;
+      --card: #161b22;
+      --border: #30363d;
+      --muted: #8b949e;
+      --text: #e6edf3;
+      --accent: #00e5ff;
+      --green: #3fb950;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap { max-width: 1100px; margin: 20px auto; padding: 16px; }
+    h1 { font-size: 1.35rem; font-weight: 600; margin: 0 0 8px; }
+    .hint { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.45; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 900px) { .row { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .card h2 { font-size: 0.95rem; margin: 0 0 10px; font-weight: 600; }
+    canvas { width: 100%; background: #000; border-radius: 8px; display: block; }
+    label { display: block; margin-top: 10px; font-size: 14px; }
+    input[type="range"] { width: 100%; }
+    .status { margin-top: 10px; font-size: 14px; color: var(--muted); min-height: 1.3em; }
+    .progress {
+      height: 10px;
+      background: #21262d;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #238636, var(--green));
+      transition: width 0.15s ease;
+    }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--muted); margin-top: 8px; }
+    button.secondary {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #21262d;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 13px;
+    }
+    button.secondary:hover { background: #30363d; }
+    button.primary {
+      margin-top: 10px;
+      margin-right: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #238636;
+      background: #238636;
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    button.primary:hover { background: #2ea043; }
+    .export-wrap { margin-top: 12px; }
+    .export-wrap textarea {
+      width: 100%;
+      min-height: 180px;
+      margin-top: 8px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #0d1117;
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      resize: vertical;
+    }
+    .row-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 8px; }
+    .row-inline label { margin-top: 0; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    #threeCanvas { height: 320px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Fourier epicycle portrait</h1>
+    <p class="hint">
+      Upload a portrait. Edges are split into up to <strong>10 separate contours</strong> (largest connected regions)
+      so each gets its own DFT—fewer jump lines between unrelated features. Processing runs in a Web Worker.
+      If the page opens as <code>file://</code>, workers may be blocked — use a local server (see bottom).
+    </p>
+
+    <div class="card">
+      <input id="file" type="file" accept="image/*" />
+      <label>Edge threshold: <span id="edgeVal">120</span></label>
+      <input id="edge" type="range" min="20" max="255" value="120" />
+      <label>Max sample points total (shared across paths): <span id="maxPtsVal">2000</span></label>
+      <input id="maxPts" type="range" min="800" max="4000" step="100" value="2000" />
+      <label>Terms (DFT harmonics cap): <span id="termsVal">180</span></label>
+      <input id="terms" type="range" min="1" max="400" value="180" />
+      <div class="row-inline">
+        <label><input type="checkbox" id="perPathCaps" checked /> Use per-path term caps (200 / 120 / 40 / …)</label>
+      </div>
+      <label>Speed: <span id="speedVal">1.0</span></label>
+      <input id="speed" type="range" min="0.2" max="3" step="0.1" value="1.0" />
+      <button type="button" class="secondary" id="reprocess">Re-run with current settings</button>
+      <div class="export-wrap">
+        <button type="button" class="primary" id="copyDesmos">Copy Desmos equations</button>
+        <button type="button" class="secondary" id="refreshExport">Refresh export text</button>
+        <textarea id="exportOut" readonly spellcheck="false" placeholder="Process an image to generate copy-paste parametric equations (centered coords + y-flip note for Desmos)…"></textarea>
+      </div>
+
+      <div class="progress"><div class="bar" id="bar"></div></div>
+      <div class="status" id="status">Waiting for image…</div>
+      <div class="mono" id="meta"></div>
+    </div>
+
+    <div class="row" style="margin-top:16px;">
+      <div class="card">
+        <h2>Edge preview</h2>
+        <canvas id="edgeCanvas" width="520" height="520"></canvas>
+      </div>
+      <div class="card">
+        <h2>Epicycle trace</h2>
+        <canvas id="drawCanvas" width="520" height="520"></canvas>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <h2>Three.js 3D contour view</h2>
+      <canvas id="threeCanvas" width="960" height="320"></canvas>
+      <div class="mono" id="threeMeta">3D view idle.</div>
+    </div>
+
+    <p class="hint" style="margin-top:20px;">
+      Local server (from this folder): <code>python3 -m http.server 8765</code> then open
+      <code>http://localhost:8765/</code>
+    </p>
+  </div>
+
+  <script type="module">
+    const fileInput = document.getElementById("file");
+    const edgeSlider = document.getElementById("edge");
+    const maxPtsSlider = document.getElementById("maxPts");
+    const termsSlider = document.getElementById("terms");
+    const speedSlider = document.getElementById("speed");
+    const reprocessBtn = document.getElementById("reprocess");
+    const perPathCapsEl = document.getElementById("perPathCaps");
+    const copyDesmosBtn = document.getElementById("copyDesmos");
+    const refreshExportBtn = document.getElementById("refreshExport");
+    const exportOut = document.getElementById("exportOut");
+
+    const edgeVal = document.getElementById("edgeVal");
+    const maxPtsVal = document.getElementById("maxPtsVal");
+    const termsVal = document.getElementById("termsVal");
+    const speedVal = document.getElementById("speedVal");
+    const statusEl = document.getElementById("status");
+    const bar = document.getElementById("bar");
+    const meta = document.getElementById("meta");
+
+    const edgeCanvas = document.getElementById("edgeCanvas");
+    const edgeCtx = edgeCanvas.getContext("2d", { willReadFrequently: true });
+    const drawCanvas = document.getElementById("drawCanvas");
+    const drawCtx = drawCanvas.getContext("2d");
+    const threeCanvas = document.getElementById("threeCanvas");
+    const threeMeta = document.getElementById("threeMeta");
+
+    let worker = null;
+    /** @type {{ coeffsRe: Float32Array, coeffsIm: Float32Array, N: number, termCap: number }[]} */
+    let paths = [];
+    let imgW = 520;
+    let imgH = 520;
+    let lastFile = null;
+    /** @type {{ x: number, y: number }[][]} */
+    let traces = [];
+    let tParam = 0;
+    let raf = null;
+    let threeReady = false;
+    let threeState = null;
+
+    function pathStroke(i, n, alpha = 1) {
+      const h = (360 * i) / Math.max(1, n);
+      return `hsla(${h}, 82%, 58%, ${alpha})`;
+    }
+
+    async function ensureThree() {
+      if (threeReady && threeState) return;
+      try {
+        const THREE = await import("https://unpkg.com/three@0.184.0/build/three.module.js");
+        const renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, antialias: true, alpha: false });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(threeCanvas.clientWidth, threeCanvas.clientHeight, false);
+        renderer.setClearColor(0x000000, 1);
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(
+          50,
+          threeCanvas.clientWidth / Math.max(1, threeCanvas.clientHeight),
+          0.1,
+          5000
+        );
+        camera.position.set(0, -220, 520);
+        camera.lookAt(0, 0, 0);
+
+        const ambient = new THREE.AmbientLight(0xffffff, 0.9);
+        scene.add(ambient);
+
+        const group = new THREE.Group();
+        scene.add(group);
+
+        threeState = { THREE, renderer, scene, camera, group };
+        threeReady = true;
+        threeMeta.textContent = "Three.js loaded. 3D contours will appear after processing.";
+      } catch (err) {
+        threeMeta.textContent = `Three.js failed to load: ${err && err.message ? err.message : String(err)}`;
+      }
+    }
+
+    function round6(x) {
+      return Math.round(x * 1e6) / 1e6;
+    }
+
+    /** Effective harmonics for path pi */
+    function effectiveTerms(pi) {
+      const p = paths[pi];
+      if (!p) return 0;
+      const globalCap = +termsSlider.value;
+      if (perPathCapsEl.checked && p.termCap != null) {
+        return Math.min(globalCap, p.termCap, p.N);
+      }
+      return Math.min(globalCap, p.N);
+    }
+
+    function samplePathPoint(path, t, cap) {
+      let re = 0;
+      let im = 0;
+      for (let k = 0; k < cap; k++) {
+        const ck = path.coeffsRe[k];
+        const sk = path.coeffsIm[k];
+        const angle = k * t;
+        re += ck * Math.cos(angle) - sk * Math.sin(angle);
+        im += ck * Math.sin(angle) + sk * Math.cos(angle);
+      }
+      return { x: re, y: im };
+    }
+
+    function rebuildThreeGeometry() {
+      if (!threeReady || !threeState) return;
+      const { THREE, group } = threeState;
+      while (group.children.length) {
+        const obj = group.children.pop();
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) obj.material.dispose();
+      }
+      if (!paths.length) {
+        threeMeta.textContent = "3D view idle.";
+        return;
+      }
+
+      const pathCount = paths.length;
+      const zStep = 16;
+      const zBase = -((pathCount - 1) * zStep) / 2;
+
+      for (let pi = 0; pi < pathCount; pi++) {
+        const cap = effectiveTerms(pi);
+        const samples = Math.max(80, Math.min(600, cap * 6));
+        const pts = new Float32Array(samples * 3);
+        for (let s = 0; s < samples; s++) {
+          const t = (2 * Math.PI * s) / samples;
+          const p = samplePathPoint(paths[pi], t, cap);
+          pts[s * 3] = p.x;
+          pts[s * 3 + 1] = -p.y;
+          pts[s * 3 + 2] = zBase + pi * zStep;
+        }
+        const geom = new THREE.BufferGeometry();
+        geom.setAttribute("position", new THREE.BufferAttribute(pts, 3));
+        const color = new THREE.Color(`hsl(${(360 * pi) / Math.max(1, pathCount)}, 82%, 58%)`);
+        const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.95 });
+        const line = new THREE.LineLoop(geom, mat);
+        group.add(line);
+      }
+      threeMeta.textContent = `3D showing ${pathCount} loop(s) with current harmonics.`;
+    }
+
+    function buildDesmosExport() {
+      if (!paths.length) {
+        return "// No paths yet — upload and process an image first.\n";
+      }
+      const cx = round6(imgW / 2);
+      const cy = round6(imgH / 2);
+      const lines = [];
+      lines.push("// Fourier paths (DFT → magnitude/phase). Coordinates centered on image center.");
+      lines.push(`// Image size: ${imgW}×${imgH}  →  cx=${cx}, cy=${cy}`);
+      lines.push("// Screen / canvas (y down):  x_s = cx + X(t),  y_s = cy + Y(t)");
+      lines.push("// Desmos y-up style:        x = cx + X(t),  y = cy - Y(t)   (negate Y)");
+      lines.push("");
+      for (let pi = 0; pi < paths.length; pi++) {
+        const p = paths[pi];
+        const cap = effectiveTerms(pi);
+        const { coeffsRe, coeffsIm } = p;
+        const partsX = [];
+        const partsY = [];
+        for (let k = 0; k < cap; k++) {
+          const ck = coeffsRe[k];
+          const sk = coeffsIm[k];
+          const A = round6(Math.hypot(ck, sk));
+          const ph = round6(Math.atan2(sk, ck));
+          if (k > 0 && Math.abs(A) < 1e-8) continue;
+          partsX.push(`${A}*cos(${k}*t+${ph})`);
+          partsY.push(`${A}*sin(${k}*t+${ph})`);
+        }
+        lines.push(`// --- Path ${pi + 1} (harmonics 0…${cap - 1}, N=${p.N}, termCap=${p.termCap ?? "—"}) ---`);
+        lines.push(`X_{${pi + 1}}(t)=${partsX.join("+")}`);
+        lines.push(`Y_{${pi + 1}}(t)=${partsY.join("+")}`);
+        lines.push("");
+      }
+      lines.push("// Paste into Desmos: one folder per path; use (cx + X_k(t), cy - Y_k(t)) for y-up.");
+      return lines.join("\n");
+    }
+
+    function refreshExportText() {
+      exportOut.value = buildDesmosExport();
+      rebuildThreeGeometry();
+    }
+
+    edgeSlider.oninput = () => { edgeVal.textContent = edgeSlider.value; };
+    maxPtsSlider.oninput = () => { maxPtsVal.textContent = maxPtsSlider.value; };
+    termsSlider.oninput = () => {
+      termsVal.textContent = termsSlider.value;
+      refreshExportText();
+    };
+    perPathCapsEl.onchange = () => {
+      refreshExportText();
+    };
+    speedSlider.oninput = () => { speedVal.textContent = Number(speedSlider.value).toFixed(1); };
+    window.addEventListener("resize", () => {
+      if (!threeReady || !threeState) return;
+      const { renderer, camera } = threeState;
+      const w = Math.max(200, threeCanvas.clientWidth);
+      const h = Math.max(160, threeCanvas.clientHeight);
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    });
+
+    function setProgress(pct, msg) {
+      bar.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+      statusEl.textContent = msg;
+    }
+
+    function renderEdgePreview(edges, w, h) {
+      const img = edgeCtx.createImageData(w, h);
+      const d = img.data;
+      for (let i = 0; i < edges.length; i++) {
+        const v = edges[i];
+        const o = i * 4;
+        d[o] = 0;
+        d[o + 1] = v;
+        d[o + 2] = 0;
+        d[o + 3] = 255;
+      }
+      edgeCtx.putImageData(img, 0, 0);
+    }
+
+    function tick() {
+      raf = requestAnimationFrame(tick);
+      drawCtx.fillStyle = "#000";
+      drawCtx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+      if (!paths.length) return;
+
+      const termsLimit = +termsSlider.value;
+      const speed = +speedSlider.value;
+      const cx = drawCanvas.width / 2;
+      const cy = drawCanvas.height / 2;
+      const np = paths.length;
+
+      for (let pi = 0; pi < np; pi++) {
+        const { coeffsRe, coeffsIm, N, termCap } = paths[pi];
+        if (N < 2) continue;
+        let cap = Math.min(termsLimit, N);
+        if (perPathCapsEl.checked && termCap != null) cap = Math.min(cap, termCap);
+
+        let x = cx;
+        let y = cy;
+
+        for (let k = 0; k < cap; k++) {
+          const prevX = x;
+          const prevY = y;
+          const ck = coeffsRe[k];
+          const sk = coeffsIm[k];
+          const angle = k * tParam + Math.atan2(sk, ck);
+          const r = Math.hypot(ck, sk);
+          x += r * Math.cos(angle);
+          y += r * Math.sin(angle);
+
+          drawCtx.strokeStyle = "rgba(120,120,120,0.22)";
+          drawCtx.beginPath();
+          drawCtx.arc(prevX, prevY, r, 0, Math.PI * 2);
+          drawCtx.stroke();
+
+          drawCtx.strokeStyle = pathStroke(pi, np, 0.35);
+          drawCtx.beginPath();
+          drawCtx.moveTo(prevX, prevY);
+          drawCtx.lineTo(x, y);
+          drawCtx.stroke();
+        }
+
+        if (!traces[pi]) traces[pi] = [];
+        traces[pi].unshift({ x, y });
+        if (traces[pi].length > 12000) traces[pi].pop();
+
+        drawCtx.beginPath();
+        const tr = traces[pi];
+        const lim = Math.min(tr.length, 8000);
+        for (let i = 0; i < lim; i++) {
+          const p = tr[i];
+          if (i === 0) drawCtx.moveTo(p.x, p.y);
+          else drawCtx.lineTo(p.x, p.y);
+        }
+        drawCtx.strokeStyle = pathStroke(pi, np, 0.95);
+        drawCtx.lineWidth = 2;
+        drawCtx.stroke();
+      }
+
+      const refN = paths.reduce((m, p) => Math.max(m, p.N), 1);
+      const dt = ((2 * Math.PI) / refN) * speed;
+      tParam += dt;
+      if (tParam > 2 * Math.PI) {
+        tParam -= 2 * Math.PI;
+        traces = paths.map(() => []);
+      }
+
+      if (threeReady && threeState) {
+        const { renderer, scene, camera, group } = threeState;
+        group.rotation.z += 0.003;
+        group.rotation.x = -0.6;
+        renderer.render(scene, camera);
+      }
+    }
+
+    function ensureWorker() {
+      if (worker) worker.terminate();
+      worker = new Worker(new URL("./fourier-worker.js", import.meta.url));
+      return worker;
+    }
+
+    async function processFile(file) {
+      if (!file) return;
+      lastFile = file;
+      cancelAnimationFrame(raf);
+      traces = [];
+      tParam = 0;
+      paths = [];
+
+      setProgress(2, "Decoding image…");
+
+      let bmp;
+      try {
+        bmp = await createImageBitmap(file);
+      } catch (e) {
+        setProgress(0, "Could not decode image. Try PNG or JPEG.");
+        meta.textContent = e && e.message ? e.message : String(e);
+        return;
+      }
+      const maxSide = 520;
+      const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+      const targetW = Math.max(64, Math.round(bmp.width * scale));
+      const targetH = Math.max(64, Math.round(bmp.height * scale));
+
+      setProgress(5, "Starting worker…");
+
+      let w;
+      try {
+        w = ensureWorker();
+      } catch (e) {
+        setProgress(0, "Could not start worker. Serve over http:// (not file://).");
+        meta.textContent = e && e.message ? e.message : String(e);
+        bmp.close();
+        return;
+      }
+
+      const onMessage = (ev) => {
+        const msg = ev.data;
+        if (msg.type === "progress") {
+          setProgress(msg.percent, msg.stage || "Working…");
+        } else if (msg.type === "error") {
+          w.removeEventListener("message", onMessage);
+          setProgress(0, msg.message || "Error");
+          meta.textContent = "";
+        } else if (msg.type === "done") {
+          w.removeEventListener("message", onMessage);
+          imgW = msg.w;
+          imgH = msg.h;
+          edgeCanvas.width = msg.w;
+          edgeCanvas.height = msg.h;
+          drawCanvas.width = msg.w;
+          drawCanvas.height = msg.h;
+
+          const edges = new Uint8Array(msg.edgePreview);
+          renderEdgePreview(edges, msg.w, msg.h);
+
+          paths = (msg.paths || []).map((p) => ({
+            coeffsRe: new Float32Array(p.coeffsRe),
+            coeffsIm: new Float32Array(p.coeffsIm),
+            N: p.N,
+            termCap: p.termCap != null ? p.termCap : p.N,
+          }));
+          traces = paths.map(() => []);
+
+          setProgress(100, "Ready — animating.");
+          const sizes = paths.map((p) => p.N).join(", ");
+          const caps = paths.map((p) => p.termCap).join(", ");
+          meta.textContent = `${paths.length} path(s), N = [${sizes}] · term caps [${caps}] · ${msg.w}×${msg.h}`;
+          refreshExportText();
+
+          cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(tick);
+        }
+      };
+
+      w.addEventListener("message", onMessage);
+
+      w.postMessage(
+        {
+          bitmap: bmp,
+          edgeThreshold: +edgeSlider.value,
+          maxPoints: +maxPtsSlider.value,
+          targetW,
+          targetH,
+        },
+        [bmp]
+      );
+    }
+
+    fileInput.addEventListener("change", () => {
+      const f = fileInput.files && fileInput.files[0];
+      if (f) processFile(f);
+    });
+
+    reprocessBtn.addEventListener("click", () => {
+      if (lastFile) processFile(lastFile);
+    });
+
+    refreshExportBtn.addEventListener("click", refreshExportText);
+
+    copyDesmosBtn.addEventListener("click", async () => {
+      refreshExportText();
+      const t = exportOut.value;
+      try {
+        await navigator.clipboard.writeText(t);
+        statusEl.textContent = "Copied Desmos text to clipboard.";
+      } catch (_) {
+        exportOut.select();
+        statusEl.textContent = "Clipboard blocked — text selected; copy manually.";
+      }
+    });
+
+    // Start animation loop once (idle until coeffs exist)
+    ensureThree();
+    raf = requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

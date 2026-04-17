@@ -47,7 +47,7 @@ function simplifyGrayscale(gray, w, h) {
   const tmp = new Float32Array(w * h);
   const a = new Float32Array(w * h);
   a.set(gray);
-  const passes = 3;
+  const passes = 2;
   const r = 2;
   for (let p = 0; p < passes; p++) {
     boxBlurH(a, tmp, w, h, r);
@@ -55,7 +55,7 @@ function simplifyGrayscale(gray, w, h) {
   }
   const out = new Float32Array(w * h);
   for (let i = 0; i < out.length; i++) {
-    out[i] = 0.62 * a[i] + 0.38 * gray[i];
+    out[i] = 0.52 * a[i] + 0.48 * gray[i];
   }
   return out;
 }
@@ -147,7 +147,8 @@ function lineArtRgbaFromMagnitude(mag, w, h) {
 
 const PATH_COUNT = 10;
 /** Suggested max harmonics per path (largest blobs → more terms), clamped to sample count N. */
-const PATH_TERM_CAPS = [200, 120, 40, 40, 25, 25, 30, 50, 35, 20];
+/** Higher caps on early paths help the main face loop carry more facial detail. */
+const PATH_TERM_CAPS = [320, 220, 100, 80, 70, 60, 55, 50, 48, 45];
 const DX8 = [-1, 0, 1, -1, 1, -1, 0, 1];
 const DY8 = [-1, -1, -1, 0, 0, 1, 1, 1];
 
@@ -419,7 +420,10 @@ self.onmessage = (e) => {
       return;
     }
 
-    const perPathMax = Math.max(8, Math.floor(maxPoints / Math.max(1, selected.length)));
+    const nSel = selected.length;
+    const restSlots = Math.max(0, nSel - 1);
+    const restEach = restSlots > 0 ? Math.max(10, Math.floor((maxPoints * 0.38) / restSlots)) : 0;
+    const firstMax = Math.max(64, maxPoints - restEach * restSlots);
     const cx = w / 2;
     const cy = h / 2;
 
@@ -432,6 +436,7 @@ self.onmessage = (e) => {
     const progressSpan = 0.45;
 
     for (const comp of selected) {
+      const perPathMax = pathIndex === 0 ? firstMax : restEach;
       const ordered = orderComponentGreedy(comp.pixels);
       const pts = resampleByArcLength(ordered, perPathMax);
       const N = pts.length;

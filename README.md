@@ -1,6 +1,6 @@
 # Fourier Epicycle Studio
 
-Browser app that turns a **photo** into **sparse Fourier epicycle** motion: separate contour regions are traced, each path gets a complex FFT with magnitude-sorted terms, and you watch the sum of rotating circles redraw your subject. Includes **Desmos-friendly exports** (annotated and plain ASCII), a **Three.js** orbit view, and a **Web Worker** so the UI stays responsive.
+Browser app that turns a **photo** into **sparse Fourier epicycle** motion: separate contour regions are traced, each path gets a complex FFT with magnitude-sorted terms, and you watch the sum of rotating circles redraw your subject. Includes **Desmos-friendly exports** (annotated and plain ASCII), a **Three.js** orbit view, and a **Web Worker** so the UI stays responsive. The UI is split into **hash sections** (Overview, Upload & settings, Canvases, Export, 3D contour depth) so you can jump between screens without scrolling through everything at once.
 
 ## What you see
 

@@ -7,6 +7,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <!-- OrbitControls imports bare "three"; import maps map it to a full URL (required in browsers). -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.184.0/build/three.module.js",
+      "three/examples/jsm/": "https://unpkg.com/three@0.184.0/examples/jsm/"
+    }
+  }
+  </script>
   <style>
     :root {
       --bg: #faf6ef;
@@ -1667,10 +1676,8 @@
     async function ensureThree() {
       if (threeReady && threeState) return;
       try {
-        const THREE = await import("https://unpkg.com/three@0.184.0/build/three.module.js");
-        const { OrbitControls } = await import(
-          "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js"
-        );
+        const THREE = await import("three");
+        const { OrbitControls } = await import("three/examples/jsm/controls/OrbitControls.js");
         const renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, antialias: true, alpha: false });
         renderer.setClearColor(0xf7ecd8, 1);
 

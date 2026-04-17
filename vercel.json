@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/neon_lineart.py": {
+      "memory": 1024,
+      "maxDuration": 60,
+      "excludeFiles": "{.next/**,node_modules/**,legacy/**,.git/**}"
+    }
+  }
+}

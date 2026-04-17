@@ -5,8 +5,7 @@
  * 2. **Shape-preserving simplify** — separable box blur (**3 passes**, radius 2), then
  *    `0.62·blur + 0.38·raw` (matches your `Downloads/fourier-worker.js` and tuned studio).
  * 3. **Sobel magnitude** — 3×3 kernels Gx, Gy on the simplified image; store √(Gx² + Gy²). The **neon line art**
- *    preview uses a separate high-quality pipeline (`neonLineArt.ts`: NMS, tone map, bloom, unsharp, color grade);
- *    contour thresholding still uses this raw magnitude.
+ *    preview is produced only by the OpenCV pipeline (`/api/neon_lineart`). Contour thresholding uses this magnitude.
  * 4. **Adaptive threshold** — binary mask: Sobel magnitude ≥ a **percentile** of sampled
  *    magnitudes. The legacy `edgeThreshold` slider (20–255) maps to percentile
  *    `p = 0.88 + ((thr−20)/(255−20))·0.11` (stricter edges when the slider is higher).
@@ -25,7 +24,6 @@
 
 import type { Point2 } from "./fourier";
 import { resampleByArcLength } from "./fourier";
-import { renderNeonLineArtDataUrl } from "./neonLineArt";
 
 export type ContourFromImageOptions = {
   maxSide?: number;
@@ -40,8 +38,6 @@ export type ContourFromImageResult = {
   fftOrigin: Point2;
   width: number;
   height: number;
-  /** Sobel neon preview (same recipe as static studio worker). */
-  lineArtDataUrl: string;
 };
 
 const DX8 = [-1, 0, 1, -1, 1, -1, 0, 1];
@@ -262,7 +258,6 @@ export async function contourPathFromImageFile(
   const gray = grayscaleFromImageData(data, w, h);
   const simplified = simplifyGrayscale(gray, w, h);
   const mag = sobelMagnitudeFloat(simplified, w, h);
-  const lineArtDataUrl = renderNeonLineArtDataUrl(simplified, w, h);
   const edges = binaryEdgesFromMagnitude(mag, w, h, edgeThreshold);
 
   const components = connectedEdgeComponents(edges, w, h);
@@ -276,11 +271,10 @@ export async function contourPathFromImageFile(
       fftOrigin,
       width: w,
       height: h,
-      lineArtDataUrl,
     };
   }
 
   const ordered = orderComponentGreedy(selected.pixels);
   const path = resampleByArcLength(ordered, samplePoints);
-  return { path, fftOrigin, width: w, height: h, lineArtDataUrl };
+  return { path, fftOrigin, width: w, height: h };
 }

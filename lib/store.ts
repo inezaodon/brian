@@ -33,7 +33,7 @@ type BrianState = {
   setLineWidth: (w: number) => void;
   setScrub: (s: number) => void;
   setOriginalImageSrc: (src: string | null) => void;
-  /** Pass `fftOrigin` / `imageSize` / `lineArtDataUrl` from `contourPathFromImageFile`. */
+  /** Pass `fftOrigin` / `imageSize` / `lineArtDataUrl` (OpenCV `/api/neon_lineart` only; null if unavailable). */
   setSourcePath: (
     path: Point2[],
     options?: {

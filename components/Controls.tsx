@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { contourPathFromImageFile } from "@/lib/contourFromImage";
+import { fetchOpenCvNeonLineartAsDataUrl } from "@/lib/fetchOpenCvNeonLineart";
 import { useBrianStore } from "@/lib/store";
 import { useState } from "react";
 
@@ -112,17 +113,25 @@ export function Controls() {
             try {
               objectUrl = URL.createObjectURL(f);
               setOriginalImageSrc(objectUrl);
-              const { path, fftOrigin, width, height, lineArtDataUrl } = await contourPathFromImageFile(f, {
-                edgeThreshold,
-                maxSide: 280,
-                samplePoints: 384,
-              });
+              const [contour, openCvLineArt] = await Promise.all([
+                contourPathFromImageFile(f, {
+                  edgeThreshold,
+                  maxSide: 280,
+                  samplePoints: 384,
+                }),
+                fetchOpenCvNeonLineartAsDataUrl(f),
+              ]);
+              const { path, fftOrigin, width, height } = contour;
               setSourcePath(path, {
                 fftOrigin,
                 imageSize: { w: width, h: height },
-                lineArtDataUrl,
+                lineArtDataUrl: openCvLineArt,
               });
-              setMsg("Contour traced (blur → Sobel → percentile mask → greedy chain → DFT).");
+              setMsg(
+                openCvLineArt
+                  ? "Contour traced; neon preview from OpenCV portrait pipeline."
+                  : "Contour traced. OpenCV neon preview unavailable (install Python deps and ensure /api/neon_lineart works).",
+              );
             } catch {
               if (objectUrl) URL.revokeObjectURL(objectUrl);
               setOriginalImageSrc(null);

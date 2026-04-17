@@ -58,7 +58,7 @@ export function Playground() {
           <div className="mt-2 flex max-h-56 min-h-[140px] items-center justify-center">
             {lineArtDataUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={lineArtDataUrl} alt="Sobel-based line art preview" className="max-h-56 w-full object-contain" />
+              <img src={lineArtDataUrl} alt="Neon line art preview" className="max-h-56 w-full object-contain" />
             ) : (
               <p className="px-4 text-center text-xs text-slate-500">Awaiting pipeline…</p>
             )}

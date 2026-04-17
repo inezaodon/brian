@@ -47,7 +47,7 @@ function simplifyGrayscale(gray, w, h) {
   const tmp = new Float32Array(w * h);
   const a = new Float32Array(w * h);
   a.set(gray);
-  const passes = 2;
+  const passes = 3;
   const r = 2;
   for (let p = 0; p < passes; p++) {
     boxBlurH(a, tmp, w, h, r);
@@ -55,7 +55,7 @@ function simplifyGrayscale(gray, w, h) {
   }
   const out = new Float32Array(w * h);
   for (let i = 0; i < out.length; i++) {
-    out[i] = 0.52 * a[i] + 0.48 * gray[i];
+    out[i] = 0.62 * a[i] + 0.38 * gray[i];
   }
   return out;
 }

@@ -21,6 +21,7 @@ export function Controls() {
   const lineWidth = useBrianStore((s) => s.lineWidth);
   const setLineWidth = useBrianStore((s) => s.setLineWidth);
   const setSourcePath = useBrianStore((s) => s.setSourcePath);
+  const setOriginalImageSrc = useBrianStore((s) => s.setOriginalImageSrc);
   const resetDemo = useBrianStore((s) => s.resetDemo);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -107,15 +108,24 @@ export function Controls() {
             if (!f) return;
             setBusy(true);
             setMsg(null);
+            let objectUrl: string | null = null;
             try {
-              const { path, fftOrigin, width, height } = await contourPathFromImageFile(f, {
+              objectUrl = URL.createObjectURL(f);
+              setOriginalImageSrc(objectUrl);
+              const { path, fftOrigin, width, height, lineArtDataUrl } = await contourPathFromImageFile(f, {
                 edgeThreshold,
-                maxSide: 240,
-                samplePoints: 320,
+                maxSide: 280,
+                samplePoints: 384,
               });
-              setSourcePath(path, { fftOrigin, imageSize: { w: width, h: height } });
+              setSourcePath(path, {
+                fftOrigin,
+                imageSize: { w: width, h: height },
+                lineArtDataUrl,
+              });
               setMsg("Contour traced (blur → Sobel → percentile mask → greedy chain → DFT).");
             } catch {
+              if (objectUrl) URL.revokeObjectURL(objectUrl);
+              setOriginalImageSrc(null);
               setMsg("Could not read that image.");
             } finally {
               setBusy(false);
@@ -124,7 +134,7 @@ export function Controls() {
           }}
         />
         <Button variant="ghost" size="sm" type="button" onClick={() => resetDemo()}>
-          Reset professor demo
+          Reset to default portrait
         </Button>
         {msg && <p className="font-mono text-xs text-cyan-800">{msg}</p>}
       </div>

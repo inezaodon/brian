@@ -74,8 +74,10 @@ export function MathCore() {
       >
         <h3 className="font-heading text-lg font-semibold text-slate-900">From pixels to complex samples</h3>
         <p className="mt-3 text-sm leading-relaxed text-slate-600">
-          Luminance first, then a short separable box blur blended back with the raw image so texture doesn’t masquerade
-          as edges. Sobel filters estimate gradients; we threshold{" "}
+          Luminance first, then three separable box-blur passes (radius 2) blended back as{" "}
+          <span className="font-mono text-slate-800">0.62·blur + 0.38·raw</span> — matching your{" "}
+          <span className="font-mono text-slate-800">Downloads/fourier-worker.js</span>. Sobel filters estimate gradients;
+          we threshold{" "}
           <span className="font-mono text-slate-800">|∇I|</span> with a <em>percentile</em> cutoff (your edge slider maps
           into that percentile exactly like the old worker). The largest 8-connected foreground blob is chained by
           greedy nearest-neighbor order and resampled uniformly in arc length to get{" "}

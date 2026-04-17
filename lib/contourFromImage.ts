@@ -2,8 +2,8 @@
  * Image → closed contour path, matching the legacy `fourier-worker.js` pipeline:
  *
  * 1. **Grayscale** — ITU-R BT.601 luminance (0.299R + 0.587G + 0.114B).
- * 2. **Shape-preserving simplify** — separable box blur (2 passes, radius 2), then
- *    `0.52·blur + 0.48·raw` to drop fine texture while keeping global edges.
+ * 2. **Shape-preserving simplify** — separable box blur (**3 passes**, radius 2), then
+ *    `0.62·blur + 0.38·raw` (matches your `Downloads/fourier-worker.js` and tuned studio).
  * 3. **Sobel magnitude** — 3×3 kernels Gx, Gy on the simplified image; store √(Gx² + Gy²).
  * 4. **Adaptive threshold** — binary mask: Sobel magnitude ≥ a **percentile** of sampled
  *    magnitudes. The legacy `edgeThreshold` slider (20–255) maps to percentile
@@ -37,6 +37,8 @@ export type ContourFromImageResult = {
   fftOrigin: Point2;
   width: number;
   height: number;
+  /** Sobel neon preview (same recipe as static studio worker). */
+  lineArtDataUrl: string;
 };
 
 const DX8 = [-1, 0, 1, -1, 1, -1, 0, 1];
@@ -80,12 +82,12 @@ function boxBlurV(src: Float32Array, dst: Float32Array, w: number, h: number, r:
   }
 }
 
-/** Strong smoothing + light blend with original: keeps global shape, drops fine texture. */
+/** Strong smoothing + light blend with original (same as `Downloads/fourier-worker.js`). */
 function simplifyGrayscale(gray: Float32Array, w: number, h: number): Float32Array {
   const tmp = new Float32Array(w * h);
   const a = new Float32Array(w * h);
   a.set(gray);
-  const passes = 2;
+  const passes = 3;
   const r = 2;
   for (let p = 0; p < passes; p++) {
     boxBlurH(a, tmp, w, h, r);
@@ -93,9 +95,62 @@ function simplifyGrayscale(gray: Float32Array, w: number, h: number): Float32Arr
   }
   const out = new Float32Array(w * h);
   for (let i = 0; i < out.length; i++) {
-    out[i] = 0.52 * a[i] + 0.48 * gray[i];
+    out[i] = 0.62 * a[i] + 0.38 * gray[i];
   }
   return out;
+}
+
+/** Neon Sobel preview from magnitude (studio `lineArtRgbaFromMagnitude`). */
+function lineArtRgbaFromMagnitude(mag: Float32Array, w: number, h: number): Uint8ClampedArray {
+  const n = mag.length;
+  let maxM = 1e-6;
+  for (let i = 0; i < n; i++) {
+    if (mag[i] > maxM) maxM = mag[i];
+  }
+  const inv = 1 / maxM;
+  const strength = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const t = Math.min(1, mag[i] * inv);
+    strength[i] = t ** 0.42;
+  }
+  const dilated = new Float32Array(n);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let m = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          const v = strength[ny * w + nx];
+          if (v > m) m = v;
+        }
+      }
+      dilated[y * w + x] = m;
+    }
+  }
+  const rgba = new Uint8ClampedArray(n * 4);
+  for (let i = 0; i < n; i++) {
+    const a = Math.floor(255 * dilated[i]);
+    const o = i * 4;
+    rgba[o] = 30;
+    rgba[o + 1] = 238;
+    rgba[o + 2] = 255;
+    rgba[o + 3] = a;
+  }
+  return rgba;
+}
+
+function rgbaToPngDataUrl(rgba: Uint8ClampedArray, w: number, h: number): string {
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+  const copy = new Uint8ClampedArray(rgba.length);
+  copy.set(rgba);
+  ctx.putImageData(new ImageData(copy, w, h), 0, 0);
+  return canvas.toDataURL("image/png");
 }
 
 function sobelMagnitudeFloat(gray: Float32Array, w: number, h: number): Float32Array {
@@ -257,6 +312,7 @@ export async function contourPathFromImageFile(
   const gray = grayscaleFromImageData(data, w, h);
   const simplified = simplifyGrayscale(gray, w, h);
   const mag = sobelMagnitudeFloat(simplified, w, h);
+  const lineArtDataUrl = rgbaToPngDataUrl(lineArtRgbaFromMagnitude(mag, w, h), w, h);
   const edges = binaryEdgesFromMagnitude(mag, w, h, edgeThreshold);
 
   const components = connectedEdgeComponents(edges, w, h);
@@ -270,10 +326,11 @@ export async function contourPathFromImageFile(
       fftOrigin,
       width: w,
       height: h,
+      lineArtDataUrl,
     };
   }
 
   const ordered = orderComponentGreedy(selected.pixels);
   const path = resampleByArcLength(ordered, samplePoints);
-  return { path, fftOrigin, width: w, height: h };
+  return { path, fftOrigin, width: w, height: h, lineArtDataUrl };
 }

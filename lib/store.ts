@@ -9,6 +9,10 @@ const DEFAULT_SPARSE = 400;
 type BrianState = {
   sourcePath: Point2[];
   model: FourierModel | null;
+  /** Public path or blob: URL for the raster shown next to traces. */
+  originalImageSrc: string | null;
+  /** PNG data URL from Sobel line-art step (same worker recipe). */
+  lineArtDataUrl: string | null;
   /** Set after raster upload — echoed in Desmos export header (legacy worker size). */
   lastImageSize: { w: number; h: number } | null;
   /** Used for the next image upload (legacy worker default ≈ 105). */
@@ -28,10 +32,15 @@ type BrianState = {
   setShowVectors: (v: boolean) => void;
   setLineWidth: (w: number) => void;
   setScrub: (s: number) => void;
-  /** Pass `fftOrigin` / `imageSize` from `contourPathFromImageFile` for exact legacy export headers. */
+  setOriginalImageSrc: (src: string | null) => void;
+  /** Pass `fftOrigin` / `imageSize` / `lineArtDataUrl` from `contourPathFromImageFile`. */
   setSourcePath: (
     path: Point2[],
-    options?: { fftOrigin?: Point2; imageSize?: { w: number; h: number } | null },
+    options?: {
+      fftOrigin?: Point2;
+      imageSize?: { w: number; h: number } | null;
+      lineArtDataUrl?: string | null;
+    },
   ) => void;
   resetDemo: () => void;
 };
@@ -45,6 +54,8 @@ const demo = buildDemoProfessorPath();
 export const useBrianStore = create<BrianState>((set, get) => ({
   sourcePath: demo,
   model: computeModel(demo),
+  originalImageSrc: null,
+  lineArtDataUrl: null,
   lastImageSize: null,
   edgeThreshold: 105,
   maxTerms: 120,
@@ -59,6 +70,11 @@ export const useBrianStore = create<BrianState>((set, get) => ({
   },
   setSpeed: (s) => set({ speed: s }),
   setEdgeThreshold: (n) => set({ edgeThreshold: Math.min(255, Math.max(20, n)) }),
+  setOriginalImageSrc: (src) => {
+    const prev = get().originalImageSrc;
+    if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+    set({ originalImageSrc: src });
+  },
   setShowCircles: (v) => set({ showCircles: v }),
   setShowPath: (v) => set({ showPath: v }),
   setShowVectors: (v) => set({ showVectors: v }),
@@ -66,17 +82,21 @@ export const useBrianStore = create<BrianState>((set, get) => ({
   setScrub: (s) => set({ scrub: Math.max(0, Math.min(1, s)) }),
   setSourcePath: (path, options) => {
     const model = computeModel(path, options?.fftOrigin);
-    const patch: Partial<Pick<BrianState, "sourcePath" | "model" | "lastImageSize">> = {
+    const patch: Partial<
+      Pick<BrianState, "sourcePath" | "model" | "lastImageSize" | "lineArtDataUrl">
+    > = {
       sourcePath: path,
       model,
     };
     if (options && "imageSize" in options) {
       patch.lastImageSize = options.imageSize ?? null;
     }
+    if (options && "lineArtDataUrl" in options) {
+      patch.lineArtDataUrl = options.lineArtDataUrl ?? null;
+    }
     set(patch);
   },
   resetDemo: () => {
-    const p = buildDemoProfessorPath();
-    set({ sourcePath: p, model: computeModel(p), lastImageSize: null });
+    void import("./defaultPortrait").then((m) => m.reloadDefaultPortrait());
   },
 }));

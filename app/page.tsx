@@ -8,6 +8,7 @@ import { Hero } from "@/components/Hero";
 import { HumorAsides } from "@/components/HumorAsides";
 import { MathCore } from "@/components/MathCore";
 import { Playground } from "@/components/Playground";
+import { PortraitGate } from "@/components/PortraitGate";
 import { Steps } from "@/components/Steps";
 import { Story } from "@/components/Story";
 
@@ -20,15 +21,17 @@ export default function Home() {
   return (
     <main className="relative min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)]">
       <Hero />
-      <Story />
-      <Steps />
-      <MathCore />
-      <Playground />
-      <ExportSection />
-      <CompareSection />
-      <EpicycleWowDynamic />
-      <HumorAsides />
-      <Footer />
+      <PortraitGate>
+        <Story />
+        <Steps />
+        <MathCore />
+        <Playground />
+        <ExportSection />
+        <CompareSection />
+        <EpicycleWowDynamic />
+        <HumorAsides />
+        <Footer />
+      </PortraitGate>
     </main>
   );
 }

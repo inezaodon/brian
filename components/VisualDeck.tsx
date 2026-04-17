@@ -1,11 +1,10 @@
 "use client";
 
 import { FourierVisualizer } from "@/components/FourierVisualizer";
-import { epicyclePosition } from "@/lib/fourier";
 import { useBrianStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, GripVertical } from "lucide-react";
-import { useId, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 export type DeckKey = "sketch" | "contour" | "line" | "image";
 
@@ -38,37 +37,6 @@ function pathToSvgD(path: { x: number; y: number }[], close: boolean) {
     pts.push(`${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`);
   });
   return pts.join(" ") + (close ? " Z" : "");
-}
-
-function FourierTraceSvg({ className }: { className?: string }) {
-  const gradId = useId().replace(/:/g, "");
-  const model = useBrianStore((s) => s.model);
-  const maxTerms = useBrianStore((s) => s.maxTerms);
-  const d = useMemo(() => {
-    if (!model) return "";
-    const pts: string[] = [];
-    for (let i = 0; i <= 140; i++) {
-      const t = (i / 140) * Math.PI * 2;
-      const p = epicyclePosition(model, t, maxTerms);
-      const x = 50 + p.x * 0.17;
-      const y = 50 + p.y * 0.17;
-      pts.push(`${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`);
-    }
-    return pts.join(" ") + " Z";
-  }, [model, maxTerms]);
-  if (!d) return <div className={className} />;
-  return (
-    <svg viewBox="0 0 100 100" className={className} aria-hidden>
-      <path d={d} fill="none" stroke={`url(#${gradId})`} strokeWidth="0.65" />
-      <defs>
-        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#0891b2" />
-          <stop offset="50%" stopColor="#7c3aed" />
-          <stop offset="100%" stopColor="#db2777" />
-        </linearGradient>
-      </defs>
-    </svg>
-  );
 }
 
 function DeckCard({
@@ -135,6 +103,8 @@ function DeckCard({
 export function VisualDeck() {
   const [order, setOrder] = useState<DeckKey[]>(["sketch", "contour", "line", "image"]);
   const sourcePath = useBrianStore((s) => s.sourcePath);
+  const originalImageSrc = useBrianStore((s) => s.originalImageSrc);
+  const lineArtDataUrl = useBrianStore((s) => s.lineArtDataUrl);
 
   const sourceD = useMemo(() => pathToSvgD(sourcePath, true), [sourcePath]);
 
@@ -188,38 +158,56 @@ export function VisualDeck() {
             </div>
           )}
           {key === "line" && (
-            <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-cyan-50 via-violet-50 to-fuchsia-50">
-              <div
-                className="pointer-events-none absolute inset-0 opacity-40"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(circle at 20% 30%, rgba(6,182,212,0.35) 0%, transparent 45%), radial-gradient(circle at 80% 70%, rgba(139,92,246,0.3) 0%, transparent 40%)",
-                }}
-              />
-              <FourierTraceSvg className="relative z-[1] h-48 w-full max-w-sm opacity-90" />
-              <p className="relative z-[1] mt-2 px-4 text-center text-[11px] text-slate-600">
-                Stylized preview — full neon Sobel pass runs on upload in the worker-style pipeline.
+            <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl bg-slate-900">
+              {lineArtDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={lineArtDataUrl}
+                  alt="Sobel magnitude as neon line art"
+                  className="h-full max-h-56 w-full max-w-sm object-contain"
+                />
+              ) : (
+                <div className="flex h-48 w-full items-center justify-center bg-slate-800 text-xs text-slate-400">
+                  Line art preview loads with the portrait…
+                </div>
+              )}
+              <p className="absolute bottom-2 left-2 right-2 text-center text-[11px] text-slate-300">
+                Same neon Sobel preview recipe as the static worker (shape-forward, dilated strength).
               </p>
             </div>
           )}
           {key === "image" && (
-            <div className="relative flex h-full w-full flex-col items-stretch justify-center overflow-hidden rounded-xl border border-dashed border-stone-300 bg-stone-100/80">
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.7)_0%,transparent_40%)]" />
-              <svg viewBox="0 0 100 100" className="relative z-[1] mx-auto h-52 w-full max-w-sm" aria-hidden>
-                <rect x="4" y="4" width="92" height="92" rx="6" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="0.4" />
-                {sourceD && (
-                  <path
-                    d={sourceD}
-                    fill="none"
-                    stroke="#64748b"
-                    strokeWidth="0.45"
-                    strokeOpacity="0.85"
-                    className="translate-x-0"
+            <div className="relative flex h-full w-full flex-col items-stretch justify-center overflow-hidden rounded-xl border border-stone-200 bg-stone-900/5">
+              {originalImageSrc ? (
+                <div className="relative mx-auto aspect-square w-full max-w-sm">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={originalImageSrc}
+                    alt="Input image scaled for processing"
+                    className="h-full w-full rounded-lg object-contain"
                   />
-                )}
-              </svg>
-              <p className="relative z-[1] mt-1 px-4 pb-2 text-center text-[11px] text-slate-600">
-                Image stack placeholder — path overlay mirrors the current store curve (demo silhouette until you upload).
+                  <svg
+                    viewBox="0 0 100 100"
+                    className="pointer-events-none absolute inset-0 h-full w-full"
+                    preserveAspectRatio="xMidYMid meet"
+                    aria-hidden
+                  >
+                    {sourceD && (
+                      <path
+                        d={sourceD}
+                        fill="none"
+                        stroke="rgba(34,211,238,0.85)"
+                        strokeWidth="0.55"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    )}
+                  </svg>
+                </div>
+              ) : (
+                <p className="p-6 text-center text-xs text-slate-500">Original image appears after the portrait loads…</p>
+              )}
+              <p className="mt-2 px-4 pb-2 text-center text-[11px] text-slate-600">
+                Scaled raster + traced loop overlay (same path fed to the FFT).
               </p>
             </div>
           )}

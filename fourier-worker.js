@@ -420,6 +420,9 @@ self.onmessage = (e) => {
       pathIndex += 1;
     }
 
+    const edgePreview = edges.buffer;
+    transfers.push(edgePreview);
+
     self.postMessage(
       {
         type: "done",
@@ -434,6 +437,7 @@ self.onmessage = (e) => {
           coeffsRe: p.coeffsRe,
           coeffsIm: p.coeffsIm,
         })),
+        edgePreview,
       },
       transfers
     );

@@ -266,12 +266,27 @@
       box-shadow: 0 0 0 3px rgba(74, 232, 255, 0.1);
     }
     .stack { display: grid; gap: 16px; }
-    .visual-sketch {
+    .visual-triple {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 16px;
-      max-width: 720px;
-      margin: 0 auto;
+      align-items: stretch;
+    }
+    @media (max-width: 1180px) {
+      .visual-triple { grid-template-columns: 1fr; }
+    }
+    .card-image-live .canvas-wrap {
+      animation: imageLiveGlow 4s ease-in-out infinite;
+    }
+    @keyframes imageLiveGlow {
+      0%, 100% { box-shadow: inset 0 0 0 1px rgba(74, 232, 255, 0.12); }
+      50% { box-shadow: inset 0 0 24px rgba(74, 232, 255, 0.08), 0 0 20px rgba(167, 139, 250, 0.12); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .card-image-live .canvas-wrap { animation: none; }
+    }
+    .three-row .canvas-wrap {
+      min-height: 280px;
     }
     .card {
       background: var(--card);
@@ -623,7 +638,10 @@
       .top-meta { text-align: center; }
     }
     #threeCanvas {
-      height: 320px;
+      display: block;
+      width: 100%;
+      height: min(320px, 42vw);
+      min-height: 240px;
       cursor: grab;
       touch-action: none;
     }
@@ -710,8 +728,8 @@
       <div class="hero-main">
         <h1>Fourier Epicycle Studio</h1>
         <p class="hint">
-          Upload an image and watch sparse Fourier epicycles sketch it live. Contours are found under the hood;
-          the main view is the drawing animation, with an optional 3D stack of the same paths.
+          Upload an image: you get a live epicycle sketch, a contour mask from simplified edges, the scaled photo,
+          and a Three.js depth view of the same Fourier paths. Export Desmos equations from the left panel.
         </p>
         <div class="hero-badges">
           <div class="mini-pill">Up to 10 contour paths</div>
@@ -824,26 +842,44 @@
       </div>
 
       <div class="stack">
-        <div class="visual-sketch">
+        <div class="visual-triple">
           <div class="card card--lift">
             <div class="card-head">
               <h2>Sketch</h2>
-              <span class="card-subtle">Fourier epicycles drawing your image</span>
+              <span class="card-subtle">Epicycle trace (Fourier sum)</span>
             </div>
             <div class="canvas-wrap">
               <canvas id="drawCanvas" width="520" height="520"></canvas>
             </div>
           </div>
+          <div class="card card--lift">
+            <div class="card-head">
+              <h2>Contour</h2>
+              <span class="card-subtle">Simplified edges to paths</span>
+            </div>
+            <div class="canvas-wrap">
+              <canvas id="edgeCanvas" width="520" height="520"></canvas>
+            </div>
+          </div>
+          <div class="card card--lift card-image-live">
+            <div class="card-head">
+              <h2>Image</h2>
+              <span class="card-subtle">Scaled input (worker size)</span>
+            </div>
+            <div class="canvas-wrap">
+              <canvas id="imageCanvas" width="520" height="520"></canvas>
+            </div>
+          </div>
         </div>
-        <div class="card card--three card--lift">
+        <div class="card card--three card--lift three-row">
           <div class="card-head">
-            <h2>Three.js · contour depth</h2>
-            <span class="live-badge">WebGL</span>
+            <h2>3D contour depth</h2>
+            <span class="live-badge">Three.js</span>
           </div>
           <div class="canvas-wrap">
-            <canvas id="threeCanvas" width="960" height="320"></canvas>
+            <canvas id="threeCanvas" width="1024" height="320"></canvas>
           </div>
-          <div class="mono" id="threeMeta">3D view — drag to orbit, scroll to zoom after processing.</div>
+          <div class="mono" id="threeMeta">WebGL — drag to orbit, scroll to zoom. If this stays black, resize the window once or re-run processing.</div>
         </div>
       </div>
 
@@ -906,6 +942,10 @@
 
     const drawCanvas = document.getElementById("drawCanvas");
     const drawCtx = drawCanvas.getContext("2d");
+    const edgeCanvas = document.getElementById("edgeCanvas");
+    const edgeCtx = edgeCanvas.getContext("2d", { willReadFrequently: true });
+    const imageCanvas = document.getElementById("imageCanvas");
+    const imageCtx = imageCanvas.getContext("2d");
     const threeCanvas = document.getElementById("threeCanvas");
     const threeMeta = document.getElementById("threeMeta");
 
@@ -927,6 +967,37 @@
       return `hsla(${h}, 82%, 58%, ${alpha})`;
     }
 
+    function renderEdgePreview(edges, w, h) {
+      const img = edgeCtx.createImageData(w, h);
+      const d = img.data;
+      for (let i = 0; i < edges.length; i++) {
+        const v = edges[i];
+        const o = i * 4;
+        d[o] = 0;
+        d[o + 1] = v;
+        d[o + 2] = 0;
+        d[o + 3] = 255;
+      }
+      edgeCtx.putImageData(img, 0, 0);
+    }
+
+    function syncThreeRenderer() {
+      if (!threeReady || !threeState) return;
+      const { renderer, camera, controls } = threeState;
+      const rect = threeCanvas.getBoundingClientRect();
+      let w = Math.max(2, Math.floor(rect.width));
+      let h = Math.max(2, Math.floor(rect.height));
+      if (w < 8 || h < 8) {
+        w = Math.max(320, threeCanvas.width || 1024);
+        h = Math.max(200, threeCanvas.height || 320);
+      }
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h, false);
+      camera.aspect = w / Math.max(1, h);
+      camera.updateProjectionMatrix();
+      controls.update();
+    }
+
     async function ensureThree() {
       if (threeReady && threeState) return;
       try {
@@ -935,17 +1006,15 @@
           "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js"
         );
         const renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, antialias: true, alpha: false });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-        renderer.setSize(threeCanvas.clientWidth, threeCanvas.clientHeight, false);
         renderer.setClearColor(0x02040a, 1);
 
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(
-          50,
-          threeCanvas.clientWidth / Math.max(1, threeCanvas.clientHeight),
-          0.1,
-          5000
+        const aspect0 = Math.max(
+          0.5,
+          (threeCanvas.clientWidth || threeCanvas.width || 1024) /
+            Math.max(1, threeCanvas.clientHeight || threeCanvas.height || 320)
         );
+        const camera = new THREE.PerspectiveCamera(50, aspect0, 0.1, 5000);
         camera.position.set(0, -220, 520);
         camera.lookAt(0, 0, 0);
 
@@ -965,6 +1034,9 @@
 
         threeState = { THREE, renderer, scene, camera, group, controls };
         threeReady = true;
+        requestAnimationFrame(() => {
+          syncThreeRenderer();
+        });
         threeMeta.textContent =
           "Ready — drag to orbit, scroll to zoom (idle auto-rotate). Process an image to see contours.";
       } catch (err) {
@@ -1038,6 +1110,7 @@
         group.add(line);
       }
       threeMeta.textContent = `Showing ${pathCount} contour loop(s) · drag to orbit · scroll to zoom · harmonics follow the Terms slider.`;
+      requestAnimationFrame(() => syncThreeRenderer());
     }
 
     function buildDesmosExport() {
@@ -1127,14 +1200,7 @@
     };
     speedSlider.oninput = () => { speedVal.textContent = Number(speedSlider.value).toFixed(1); };
     window.addEventListener("resize", () => {
-      if (!threeReady || !threeState) return;
-      const { renderer, camera, controls } = threeState;
-      const w = Math.max(200, threeCanvas.clientWidth);
-      const h = Math.max(160, threeCanvas.clientHeight);
-      renderer.setSize(w, h, false);
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      controls.update();
+      syncThreeRenderer();
     });
 
     function setProgress(pct, msg) {
@@ -1240,6 +1306,17 @@
       const targetW = Math.max(64, Math.round(bmp.width * scale));
       const targetH = Math.max(64, Math.round(bmp.height * scale));
 
+      imageCanvas.width = targetW;
+      imageCanvas.height = targetH;
+      imageCtx.fillStyle = "#03060f";
+      imageCtx.fillRect(0, 0, targetW, targetH);
+      imageCtx.drawImage(bmp, 0, 0, targetW, targetH);
+
+      edgeCanvas.width = targetW;
+      edgeCanvas.height = targetH;
+      edgeCtx.fillStyle = "#03060f";
+      edgeCtx.fillRect(0, 0, targetW, targetH);
+
       setProgress(5, "Starting worker…");
 
       let w;
@@ -1266,6 +1343,22 @@
           imgH = msg.h;
           drawCanvas.width = msg.w;
           drawCanvas.height = msg.h;
+          edgeCanvas.width = msg.w;
+          edgeCanvas.height = msg.h;
+          imageCanvas.width = msg.w;
+          imageCanvas.height = msg.h;
+          imageCtx.fillStyle = "#03060f";
+          imageCtx.fillRect(0, 0, msg.w, msg.h);
+          if (lastFile) {
+            createImageBitmap(lastFile).then((b) => {
+              imageCtx.drawImage(b, 0, 0, msg.w, msg.h);
+              b.close();
+            }).catch(() => {});
+          }
+
+          if (msg.edgePreview) {
+            renderEdgePreview(new Uint8Array(msg.edgePreview), msg.w, msg.h);
+          }
 
           paths = (msg.paths || []).map((p) => ({
             freqs: new Int16Array(p.freqs),
@@ -1281,6 +1374,7 @@
           const caps = paths.map((p) => p.termCap).join(", ");
           meta.textContent = `${paths.length} path(s), N = [${sizes}] · term caps [${caps}] · ${msg.w}×${msg.h}`;
           refreshExportText();
+          requestAnimationFrame(() => syncThreeRenderer());
 
           cancelAnimationFrame(raf);
           raf = requestAnimationFrame(tick);

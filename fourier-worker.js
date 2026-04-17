@@ -104,6 +104,47 @@ function binaryEdgesFromMagnitude(mag, w, h, edgeThreshold) {
   return out;
 }
 
+/** RGBA cyan line art from Sobel magnitude (for UI neon preview — shape-forward, softly thickened). */
+function lineArtRgbaFromMagnitude(mag, w, h) {
+  const n = mag.length;
+  let maxM = 1e-6;
+  for (let i = 0; i < n; i++) {
+    if (mag[i] > maxM) maxM = mag[i];
+  }
+  const inv = 1 / maxM;
+  const strength = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const t = Math.min(1, mag[i] * inv);
+    strength[i] = t ** 0.42;
+  }
+  const dilated = new Float32Array(n);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let m = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          const v = strength[ny * w + nx];
+          if (v > m) m = v;
+        }
+      }
+      dilated[y * w + x] = m;
+    }
+  }
+  const rgba = new Uint8ClampedArray(n * 4);
+  for (let i = 0; i < n; i++) {
+    const a = Math.floor(255 * dilated[i]);
+    const o = i * 4;
+    rgba[o] = 30;
+    rgba[o + 1] = 238;
+    rgba[o + 2] = 255;
+    rgba[o + 3] = a;
+  }
+  return rgba;
+}
+
 const PATH_COUNT = 10;
 /** Suggested max harmonics per path (largest blobs → more terms), clamped to sample count N. */
 const PATH_TERM_CAPS = [200, 120, 40, 40, 25, 25, 30, 50, 35, 20];
@@ -348,6 +389,17 @@ self.onmessage = (e) => {
     self.postMessage({ type: "progress", percent: 30, stage: "Sobel on simplified image…" });
 
     const mag = sobelMagnitudeFloat(simplified, w, h);
+
+    const lineArtRgba = lineArtRgbaFromMagnitude(mag, w, h);
+    self.postMessage(
+      {
+        type: "previewLineArt",
+        w,
+        h,
+        lineArt: lineArtRgba,
+      },
+      [lineArtRgba.buffer]
+    );
 
     self.postMessage({ type: "progress", percent: 36, stage: "Thresholding edges for contours…" });
 

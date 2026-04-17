@@ -7,8 +7,9 @@ Browser app that turns a **photo** into **sparse Fourier epicycle** motion: sepa
 | Panel | What it is |
 |--------|------------|
 | **Sketch** | 2D canvas: epicycles + accumulated trace (Fourier reconstruction). |
-| **Contour** | Binary edge mask after blur-simplify + Sobel + adaptive threshold (what paths are built from). |
-| **Image** | Your upload scaled to the same pixel size the worker uses. |
+| **Line art** | Neon Sobel preview on its own panel (reorder with other preview cards). |
+| **Contour** | Binary edge mask used for FFT paths (green on warm paper background). |
+| **Image** | Pipeline copy, then scaled photo and optional SVG trace overlay. |
 | **3D contour depth** | Three.js: stacked `LineLoop`s in depth; drag to orbit, scroll to zoom, idle auto-rotate. |
 
 ## Run locally

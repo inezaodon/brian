@@ -9,23 +9,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #040814;
-      --bg-soft: #0a1120;
-      --card: rgba(12, 18, 36, 0.88);
-      --card-2: rgba(18, 28, 52, 0.92);
-      --border: rgba(120, 160, 230, 0.2);
-      --muted: #9eb0d4;
-      --text: #f2f6ff;
-      --accent: #4ae8ff;
-      --accent-2: #a78bfa;
-      --accent-warm: #ff8c6b;
-      --green: #3ee89f;
-      --magenta: #e879f9;
-      --shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-      --shadow-glow: 0 0 0 1px rgba(74, 232, 255, 0.12), 0 16px 50px rgba(74, 232, 255, 0.08);
+      --bg: #faf6ef;
+      --bg-soft: #f3e9d8;
+      --card: rgba(255, 255, 255, 0.94);
+      --card-2: rgba(255, 252, 247, 0.98);
+      --border: rgba(101, 67, 33, 0.16);
+      --muted: #6b5344;
+      --text: #2a1f14;
+      --accent: #c9a227;
+      --accent-2: #7a4a24;
+      --accent-warm: #b45309;
+      --green: #3d7a4e;
+      --magenta: #9a6b3a;
+      --shadow: 0 14px 42px rgba(62, 42, 22, 0.1);
+      --shadow-glow: 0 0 0 1px rgba(201, 162, 39, 0.22), 0 16px 44px rgba(201, 162, 39, 0.08);
       --radius: 18px;
       --font: "Outfit", system-ui, -apple-system, sans-serif;
       --mono: "JetBrains Mono", ui-monospace, monospace;
+      --canvas-slot: #f4ebe0;
     }
     * { box-sizing: border-box; }
     body {
@@ -36,10 +37,10 @@
       line-height: 1.45;
       min-height: 100vh;
       background-image:
-        radial-gradient(ellipse 900px 500px at 75% -5%, rgba(74, 232, 255, 0.12), transparent 55%),
-        radial-gradient(ellipse 800px 420px at 10% 0%, rgba(167, 139, 250, 0.14), transparent 50%),
-        radial-gradient(ellipse 600px 400px at 90% 100%, rgba(232, 121, 249, 0.06), transparent 45%),
-        linear-gradient(185deg, #03060f 0%, #070d1a 45%, #030510 100%);
+        radial-gradient(ellipse 900px 520px at 78% -8%, rgba(255, 218, 120, 0.45), transparent 52%),
+        radial-gradient(ellipse 720px 480px at 8% 12%, rgba(210, 170, 130, 0.28), transparent 55%),
+        radial-gradient(ellipse 560px 400px at 92% 88%, rgba(255, 255, 255, 0.95), transparent 48%),
+        linear-gradient(178deg, #fffdf8 0%, #faf3e6 42%, #f3e6d4 100%);
     }
     body::before {
       content: "";
@@ -47,10 +48,10 @@
       inset: 0;
       pointer-events: none;
       background-image:
-        linear-gradient(rgba(100, 140, 220, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(100, 140, 220, 0.03) 1px, transparent 1px);
+        linear-gradient(rgba(139, 90, 43, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139, 90, 43, 0.04) 1px, transparent 1px);
       background-size: 48px 48px;
-      mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 15%, transparent 75%);
+      mask-image: radial-gradient(ellipse 85% 72% at 50% 28%, black 18%, transparent 78%);
       z-index: 0;
     }
     body::after {
@@ -58,16 +59,118 @@
       position: fixed;
       inset: 0;
       pointer-events: none;
-      background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(74, 232, 255, 0.07), transparent 55%);
-      animation: aurora 14s ease-in-out infinite alternate;
+      background: radial-gradient(ellipse 110% 75% at 50% -15%, rgba(255, 236, 160, 0.35), transparent 58%);
+      animation: warmGlow 16s ease-in-out infinite alternate;
       z-index: 0;
     }
-    @keyframes aurora {
-      0% { opacity: 0.55; transform: scale(1) translate(0, 0); }
-      100% { opacity: 1; transform: scale(1.05) translate(2%, 1%); }
+    @keyframes warmGlow {
+      0% { opacity: 0.65; transform: scale(1) translate(0, 0); }
+      100% { opacity: 1; transform: scale(1.06) translate(1.5%, 0.8%); }
+    }
+    .ambient-fly {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .ambient-fly .fly {
+      position: absolute;
+      border-radius: 999px;
+      opacity: 0.55;
+      filter: blur(0.3px);
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+    .ambient-fly .fly.f1 {
+      width: 18px;
+      height: 18px;
+      left: -5%;
+      top: 18%;
+      background: radial-gradient(circle at 30% 30%, #fff 0%, rgba(255, 245, 200, 0.95) 40%, rgba(255, 210, 80, 0.5) 100%);
+      animation: drift1 38s linear infinite;
+    }
+    .ambient-fly .fly.f2 {
+      width: 12px;
+      height: 12px;
+      left: 20%;
+      top: 70%;
+      background: #fff;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.9);
+      animation: drift2 52s linear infinite;
+    }
+    .ambient-fly .fly.f3 {
+      width: 140px;
+      height: 140px;
+      right: -8%;
+      top: 35%;
+      background: radial-gradient(circle, rgba(255, 220, 130, 0.35) 0%, rgba(160, 100, 50, 0.08) 70%, transparent 100%);
+      animation: drift3 44s ease-in-out infinite;
+    }
+    .ambient-fly .fly.f4 {
+      width: 22px;
+      height: 22px;
+      left: 55%;
+      top: -4%;
+      background: radial-gradient(circle at 40% 40%, #fffef8, rgba(201, 162, 39, 0.55));
+      animation: drift4 31s linear infinite;
+    }
+    .ambient-fly .fly.f5 {
+      width: 9px;
+      height: 9px;
+      left: 75%;
+      bottom: 12%;
+      background: rgba(255, 255, 255, 0.85);
+      animation: drift5 28s linear infinite;
+    }
+    .ambient-fly .fly.f6 {
+      width: 200px;
+      height: 200px;
+      left: -12%;
+      bottom: -10%;
+      background: radial-gradient(circle, rgba(122, 74, 36, 0.12) 0%, transparent 68%);
+      animation: drift6 60s linear infinite;
+    }
+    .ambient-fly .fly.f7 {
+      width: 16px;
+      height: 16px;
+      right: 25%;
+      top: 82%;
+      background: linear-gradient(135deg, #fff, rgba(201, 162, 39, 0.4));
+      animation: drift7 36s linear infinite;
+    }
+    @keyframes drift1 {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      100% { transform: translate(110vw, -25vh) rotate(720deg); }
+    }
+    @keyframes drift2 {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-90vw, -40vh); }
+    }
+    @keyframes drift3 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-35vw, 15vh) scale(1.15); }
+    }
+    @keyframes drift4 {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-65vw, 120vh); }
+    }
+    @keyframes drift5 {
+      0% { transform: translate(0, 0); opacity: 0.4; }
+      50% { opacity: 0.9; }
+      100% { transform: translate(-40vw, -95vh); opacity: 0.45; }
+    }
+    @keyframes drift6 {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(85vw, -30vh); }
+    }
+    @keyframes drift7 {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(55vw, -110vh) scale(0.6); }
     }
     @media (prefers-reduced-motion: reduce) {
       body::after { animation: none; }
+      .ambient-fly .fly { animation: none !important; opacity: 0.25; }
     }
     .wrap { position: relative; z-index: 1; max-width: 1260px; margin: 0 auto; padding: 18px 16px 32px; }
     .topbar {
@@ -93,15 +196,15 @@
       width: 12px;
       height: 12px;
       border-radius: 999px;
-      background: conic-gradient(from 200deg, var(--accent), var(--accent-2), var(--magenta), var(--accent));
+      background: conic-gradient(from 200deg, #fffef5, var(--accent), var(--accent-2), #f5e6c8, var(--accent));
       box-shadow:
-        0 0 18px rgba(74, 232, 255, 0.65),
-        0 0 28px rgba(167, 139, 250, 0.35);
+        0 0 14px rgba(255, 220, 140, 0.85),
+        0 0 26px rgba(201, 162, 39, 0.45);
       animation: pulse-dot 3s ease-in-out infinite;
     }
     @keyframes pulse-dot {
-      0%, 100% { box-shadow: 0 0 18px rgba(74, 232, 255, 0.55), 0 0 28px rgba(167, 139, 250, 0.3); }
-      50% { box-shadow: 0 0 26px rgba(74, 232, 255, 0.85), 0 0 36px rgba(232, 121, 249, 0.35); }
+      0%, 100% { box-shadow: 0 0 12px rgba(255, 245, 210, 0.9), 0 0 22px rgba(201, 162, 39, 0.35); }
+      50% { box-shadow: 0 0 22px rgba(255, 255, 255, 0.95), 0 0 32px rgba(201, 162, 39, 0.5); }
     }
     @media (prefers-reduced-motion: reduce) {
       .brand-dot { animation: none; }
@@ -124,8 +227,8 @@
     }
     .top-link:hover {
       color: var(--accent);
-      border-color: rgba(74, 232, 255, 0.35);
-      background: rgba(74, 232, 255, 0.06);
+      border-color: rgba(201, 162, 39, 0.35);
+      background: rgba(201, 162, 39, 0.06);
       transform: translateY(-1px);
     }
     .top-meta {
@@ -135,15 +238,15 @@
       padding: 8px 14px;
       border-radius: 999px;
       border: 1px solid var(--border);
-      background: rgba(14, 22, 42, 0.75);
+      background: rgba(255, 252, 246, 0.92);
       backdrop-filter: blur(10px);
       box-shadow: var(--shadow-glow);
       transition: border-color 0.25s, box-shadow 0.25s, color 0.25s;
     }
     .top-meta:hover {
       color: var(--text);
-      border-color: rgba(74, 232, 255, 0.35);
-      box-shadow: 0 0 0 1px rgba(74, 232, 255, 0.2), 0 12px 36px rgba(0, 0, 0, 0.35);
+      border-color: rgba(201, 162, 39, 0.35);
+      box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.2), 0 12px 36px rgba(62, 42, 22, 0.12);
     }
     .hero {
       display: grid;
@@ -154,15 +257,15 @@
     .hero-main, .hero-side {
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      background: linear-gradient(165deg, rgba(18, 28, 52, 0.92), rgba(8, 14, 28, 0.88));
+      background: linear-gradient(165deg, rgba(255, 255, 255, 0.97), rgba(253, 246, 232, 0.94));
       backdrop-filter: blur(14px);
       box-shadow: var(--shadow);
       padding: 18px 18px 16px;
       transition: border-color 0.3s, box-shadow 0.3s, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .hero-main:hover, .hero-side:hover {
-      border-color: rgba(74, 232, 255, 0.28);
-      box-shadow: var(--shadow), 0 0 50px rgba(74, 232, 255, 0.06);
+      border-color: rgba(201, 162, 39, 0.35);
+      box-shadow: var(--shadow), 0 0 40px rgba(255, 220, 150, 0.25);
       transform: translateY(-2px);
     }
     h1 {
@@ -171,7 +274,7 @@
       margin: 0 0 10px;
       letter-spacing: -0.02em;
       line-height: 1.12;
-      background: linear-gradient(120deg, #fff 0%, #c8e8ff 35%, var(--accent) 55%, var(--accent-2) 85%);
+      background: linear-gradient(120deg, #3d2914 0%, #6b4423 28%, var(--accent-2) 48%, var(--accent) 72%, #fff8e7 100%);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -186,8 +289,8 @@
     .mini-pill {
       padding: 7px 12px;
       border-radius: 999px;
-      background: linear-gradient(135deg, rgba(74, 232, 255, 0.1), rgba(167, 139, 250, 0.08));
-      border: 1px solid rgba(74, 232, 255, 0.32);
+      background: linear-gradient(135deg, rgba(201, 162, 39, 0.1), rgba(122, 74, 36, 0.08));
+      border: 1px solid rgba(201, 162, 39, 0.32);
       color: var(--accent);
       font-size: 11.5px;
       font-weight: 700;
@@ -198,8 +301,8 @@
     }
     .mini-pill:hover {
       transform: translateY(-2px) scale(1.02);
-      border-color: rgba(74, 232, 255, 0.55);
-      box-shadow: 0 8px 24px rgba(74, 232, 255, 0.12);
+      border-color: rgba(201, 162, 39, 0.55);
+      box-shadow: 0 8px 24px rgba(201, 162, 39, 0.12);
     }
     .stats {
       display: grid;
@@ -210,12 +313,12 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 11px 12px;
-      background: rgba(12, 20, 40, 0.65);
+      background: rgba(255, 252, 246, 0.88);
       transition: border-color 0.25s, background 0.25s, transform 0.2s;
     }
     .stat:hover {
-      border-color: rgba(167, 139, 250, 0.35);
-      background: rgba(20, 32, 58, 0.85);
+      border-color: rgba(122, 74, 36, 0.35);
+      background: rgba(255, 248, 230, 0.98);
       transform: translateX(4px);
     }
     .stat-k {
@@ -251,7 +354,7 @@
       padding: 10px;
       border-radius: 10px;
       border: 1px solid var(--border);
-      background: rgba(6, 10, 20, 0.92);
+      background: rgba(252, 246, 236, 0.98);
       color: var(--text);
       font-family: var(--mono);
       font-size: 11px;
@@ -262,28 +365,144 @@
     .plain-panel textarea:hover,
     .plain-panel textarea:focus {
       outline: none;
-      border-color: rgba(74, 232, 255, 0.35);
-      box-shadow: 0 0 0 3px rgba(74, 232, 255, 0.1);
+      border-color: rgba(201, 162, 39, 0.35);
+      box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.1);
     }
     .stack { display: grid; gap: 16px; }
-    .visual-triple {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+    .visual-deck {
+      display: flex;
+      flex-wrap: wrap;
       gap: 16px;
       align-items: stretch;
     }
-    @media (max-width: 1180px) {
-      .visual-triple { grid-template-columns: 1fr; }
+    .shuffle-card {
+      flex: 1 1 calc(25% - 12px);
+      min-width: min(100%, 240px);
+      display: flex;
+      flex-direction: column;
     }
-    .card-image-live .canvas-wrap {
+    @media (max-width: 1180px) {
+      .shuffle-card { flex: 1 1 100%; }
+    }
+    .shuffle-card .card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .shuffle-card .card-head > div:first-child {
+      flex: 1;
+      min-width: 0;
+    }
+    .shuffle-tools {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .shuffle-tools button {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255, 252, 246, 0.95);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1;
+      cursor: grab;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .shuffle-tools button:hover {
+      color: var(--accent);
+      border-color: rgba(201, 162, 39, 0.35);
+      background: rgba(201, 162, 39, 0.08);
+    }
+    .shuffle-tools button.shuffle-drag-handle:active {
+      cursor: grabbing;
+    }
+    .shuffle-card.is-dragging {
+      opacity: 0.55;
+    }
+    .shuffle-card.is-drop-target {
+      outline: 2px dashed rgba(201, 162, 39, 0.5);
+      outline-offset: 4px;
+    }
+    .image-stack {
+      position: relative;
+      border-radius: inherit;
+    }
+    .image-stack     .canvas-wrap-inner {
+      position: relative;
+      display: block;
+      width: 100%;
+    }
+    .canvas-wrap-inner > canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      vertical-align: top;
+    }
+    .image-svg-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1.1s ease;
+    }
+    .image-svg-overlay.is-visible {
+      opacity: 1;
+    }
+    .image-pipeline-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 16px;
+      pointer-events: none;
+      background: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(255, 252, 245, 0.94), rgba(243, 230, 210, 0.97));
+      transition: opacity 0.45s ease, visibility 0.45s;
+    }
+    .image-pipeline-overlay.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    .image-pipeline-overlay .pipeline-step {
+      font-size: clamp(13px, 2.1vw, 16px);
+      font-weight: 700;
+      color: #5a3d20;
+      letter-spacing: 0.02em;
+      line-height: 1.35;
+      max-width: 92%;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 220, 140, 0.5);
+      animation: pipelinePulse 0.5s ease both;
+    }
+    @keyframes pipelinePulse {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .canvas-wrap--neon .canvas-wrap-inner canvas {
+      filter:
+        drop-shadow(0 0 2px rgba(255, 210, 100, 0.9))
+        drop-shadow(0 0 10px rgba(201, 162, 39, 0.55))
+        drop-shadow(0 0 22px rgba(122, 74, 36, 0.2));
+    }
+    .canvas-wrap--neon .canvas-wrap {
       animation: imageLiveGlow 4s ease-in-out infinite;
     }
     @keyframes imageLiveGlow {
-      0%, 100% { box-shadow: inset 0 0 0 1px rgba(74, 232, 255, 0.12); }
-      50% { box-shadow: inset 0 0 24px rgba(74, 232, 255, 0.08), 0 0 20px rgba(167, 139, 250, 0.12); }
+      0%, 100% { box-shadow: inset 0 0 0 1px rgba(201, 162, 39, 0.18); }
+      50% { box-shadow: inset 0 0 22px rgba(255, 230, 160, 0.35), 0 0 18px rgba(201, 162, 39, 0.15); }
     }
     @media (prefers-reduced-motion: reduce) {
-      .card-image-live .canvas-wrap { animation: none; }
+      .canvas-wrap--neon .canvas-wrap { animation: none; }
+      .canvas-wrap--neon .canvas-wrap-inner canvas { filter: none; }
+      .image-pipeline-overlay .pipeline-step { animation: none; }
     }
     .three-row .canvas-wrap {
       min-height: 280px;
@@ -298,15 +517,15 @@
       transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .card--lift:hover {
-      border-color: rgba(120, 160, 230, 0.38);
-      box-shadow: var(--shadow), 0 0 0 1px rgba(74, 232, 255, 0.08), 0 20px 50px rgba(0, 0, 0, 0.35);
+      border-color: rgba(122, 74, 36, 0.28);
+      box-shadow: var(--shadow), 0 0 0 1px rgba(201, 162, 39, 0.12), 0 20px 48px rgba(62, 42, 22, 0.1);
       transform: translateY(-3px);
     }
     .card--three {
       position: relative;
       overflow: hidden;
-      border-color: rgba(74, 232, 255, 0.22);
-      background: linear-gradient(165deg, rgba(14, 22, 44, 0.95), rgba(8, 14, 30, 0.9));
+      border-color: rgba(201, 162, 39, 0.28);
+      background: linear-gradient(165deg, rgba(255, 255, 255, 0.98), rgba(252, 244, 228, 0.96));
     }
     .card--three::before {
       content: "";
@@ -314,7 +533,7 @@
       inset: 0;
       border-radius: inherit;
       padding: 1px;
-      background: linear-gradient(135deg, rgba(74, 232, 255, 0.45), rgba(167, 139, 250, 0.25), rgba(232, 121, 249, 0.2));
+      background: linear-gradient(135deg, rgba(201, 162, 39, 0.45), rgba(122, 74, 36, 0.25), rgba(184, 130, 74, 0.2));
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
@@ -334,14 +553,14 @@
       text-transform: uppercase;
       padding: 4px 8px;
       border-radius: 6px;
-      background: linear-gradient(135deg, rgba(74, 232, 255, 0.2), rgba(167, 139, 250, 0.15));
+      background: linear-gradient(135deg, rgba(201, 162, 39, 0.2), rgba(122, 74, 36, 0.15));
       color: var(--accent);
-      border: 1px solid rgba(74, 232, 255, 0.35);
+      border: 1px solid rgba(201, 162, 39, 0.35);
       animation: badge-pulse 2.5s ease-in-out infinite;
     }
     @keyframes badge-pulse {
       0%, 100% { opacity: 0.85; }
-      50% { opacity: 1; box-shadow: 0 0 14px rgba(74, 232, 255, 0.25); }
+      50% { opacity: 1; box-shadow: 0 0 14px rgba(201, 162, 39, 0.25); }
     }
     @media (prefers-reduced-motion: reduce) {
       .live-badge { animation: none; }
@@ -351,7 +570,7 @@
       margin: 0;
       font-weight: 700;
       letter-spacing: 0.2px;
-      color: #f0f5ff;
+      color: #3d2914;
     }
     .card-head {
       display: flex;
@@ -361,7 +580,7 @@
       margin-bottom: 10px;
     }
     .card-subtle { font-size: 12px; color: var(--muted); transition: color 0.25s; }
-    .card--lift:hover .card-subtle { color: #b8c8e8; }
+    .card--lift:hover .card-subtle { color: #5a4535; }
     .canvas-wrap {
       position: relative;
       border-radius: 12px;
@@ -374,7 +593,7 @@
       inset: 0;
       border-radius: inherit;
       padding: 1px;
-      background: linear-gradient(145deg, rgba(74, 232, 255, 0.25), transparent 40%, rgba(167, 139, 250, 0.15));
+      background: linear-gradient(145deg, rgba(201, 162, 39, 0.25), transparent 40%, rgba(122, 74, 36, 0.15));
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
@@ -386,15 +605,15 @@
     .card--lift:hover .canvas-wrap::after { opacity: 0.95; }
     canvas {
       width: 100%;
-      background: radial-gradient(ellipse 80% 80% at 50% 40%, #0a1224 0%, #03060f 100%);
+      background: radial-gradient(ellipse 80% 80% at 50% 40%, #fffdf8 0%, var(--canvas-slot) 100%);
       border-radius: 10px;
       display: block;
-      border: 1px solid rgba(100, 120, 180, 0.2);
+      border: 1px solid rgba(122, 74, 36, 0.15);
       transition: border-color 0.3s, box-shadow 0.3s;
     }
     .card--lift:hover canvas {
-      border-color: rgba(74, 232, 255, 0.28);
-      box-shadow: inset 0 0 40px rgba(74, 232, 255, 0.04);
+      border-color: rgba(201, 162, 39, 0.28);
+      box-shadow: inset 0 0 40px rgba(201, 162, 39, 0.04);
     }
     .controls-panel { position: sticky; top: 16px; }
     .control-group {
@@ -406,17 +625,17 @@
       transition: border-color 0.3s, box-shadow 0.3s, transform 0.25s;
     }
     .control-group:hover {
-      border-color: rgba(120, 160, 230, 0.38);
-      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+      border-color: rgba(122, 74, 36, 0.22);
+      box-shadow: 0 8px 28px rgba(62, 42, 22, 0.08);
     }
     .control-group h3 {
       margin: 0 0 8px;
       font-size: 12px;
-      color: #d2dffa;
+      color: #6b5344;
       letter-spacing: 0.45px;
       text-transform: uppercase;
     }
-    label { display: block; margin-top: 10px; font-size: 13px; color: #d3def2; }
+    label { display: block; margin-top: 10px; font-size: 13px; color: #5c4838; }
     label:first-of-type { margin-top: 0; }
     .field-row {
       display: flex;
@@ -436,7 +655,7 @@
       font-weight: 800;
       font-variant-numeric: tabular-nums;
       color: var(--accent);
-      text-shadow: 0 0 20px rgba(74, 232, 255, 0.35);
+      text-shadow: 0 0 20px rgba(201, 162, 39, 0.35);
     }
     .tip-host {
       position: relative;
@@ -446,8 +665,8 @@
       width: 22px;
       height: 22px;
       border-radius: 999px;
-      border: 1px solid rgba(74, 232, 255, 0.35);
-      background: rgba(74, 232, 255, 0.08);
+      border: 1px solid rgba(201, 162, 39, 0.35);
+      background: rgba(201, 162, 39, 0.08);
       color: var(--accent);
       font-size: 12px;
       font-weight: 800;
@@ -457,9 +676,9 @@
     }
     .tip-btn:hover {
       transform: scale(1.12);
-      background: rgba(74, 232, 255, 0.18);
-      border-color: rgba(74, 232, 255, 0.65);
-      box-shadow: 0 0 16px rgba(74, 232, 255, 0.25);
+      background: rgba(201, 162, 39, 0.18);
+      border-color: rgba(201, 162, 39, 0.65);
+      box-shadow: 0 0 16px rgba(201, 162, 39, 0.25);
     }
     .tip-host:focus-within .tip-pop,
     .tip-host:hover .tip-pop {
@@ -476,11 +695,11 @@
       font-size: 11.5px;
       font-weight: 500;
       line-height: 1.45;
-      color: #e0e8f8;
-      background: linear-gradient(165deg, rgba(22, 32, 58, 0.98), rgba(12, 18, 36, 0.98));
-      border: 1px solid rgba(74, 232, 255, 0.28);
+      color: #3d2914;
+      background: linear-gradient(165deg, rgba(255, 252, 247, 0.99), rgba(252, 244, 228, 0.98));
+      border: 1px solid rgba(201, 162, 39, 0.28);
       border-radius: 12px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04);
+      box-shadow: 0 16px 40px rgba(62, 42, 22, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.6);
       opacity: 0;
       visibility: hidden;
       transform: translateY(6px) scale(0.98);
@@ -494,7 +713,7 @@
       top: 100%;
       right: 10px;
       border: 7px solid transparent;
-      border-top-color: rgba(22, 32, 58, 0.98);
+      border-top-color: rgba(255, 252, 247, 0.98);
     }
     input[type="range"] {
       width: 100%;
@@ -512,16 +731,16 @@
       font-size: 13px;
       font-family: var(--font);
       color: var(--muted);
-      border: 1px dashed rgba(133, 161, 215, 0.35);
+      border: 1px dashed rgba(122, 74, 36, 0.28);
       border-radius: 10px;
       padding: 10px;
-      background: rgba(8, 14, 25, 0.65);
+      background: rgba(255, 252, 246, 0.9);
       cursor: pointer;
       transition: border-color 0.25s, background 0.25s, color 0.25s;
     }
     input[type="file"]:hover {
-      border-color: rgba(74, 232, 255, 0.45);
-      background: rgba(74, 232, 255, 0.06);
+      border-color: rgba(201, 162, 39, 0.45);
+      background: rgba(201, 162, 39, 0.06);
       color: var(--text);
     }
     .status {
@@ -532,16 +751,16 @@
     }
     .progress {
       height: 10px;
-      background: #1b2840;
+      background: #e8dcc8;
       border-radius: 999px;
       overflow: hidden;
       margin-top: 8px;
-      border: 1px solid #31415f;
+      border: 1px solid rgba(122, 74, 36, 0.2);
     }
     .bar {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #24a966, var(--green));
+      background: linear-gradient(90deg, #c9a227, #7a4a24);
       transition: width 0.15s ease;
     }
     .mono {
@@ -557,7 +776,7 @@
       padding: 9px 14px;
       border-radius: 10px;
       border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(28, 40, 68, 0.95), rgba(18, 26, 48, 0.98));
+      background: linear-gradient(180deg, #fffefb, #f5ead8);
       color: var(--text);
       cursor: pointer;
       font-size: 13px;
@@ -566,29 +785,29 @@
       transition: transform 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
     }
     button.secondary:hover {
-      background: linear-gradient(180deg, #2a3d62, #1e2c4a);
-      border-color: rgba(74, 232, 255, 0.35);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      background: linear-gradient(180deg, #fff9ec, #efe2cc);
+      border-color: rgba(201, 162, 39, 0.45);
+      box-shadow: 0 8px 24px rgba(62, 42, 22, 0.1);
       transform: translateY(-1px);
     }
     button.secondary:active { transform: translateY(0); }
     button.primary {
       padding: 9px 14px;
       border-radius: 10px;
-      border: 1px solid rgba(62, 232, 159, 0.45);
-      background: linear-gradient(135deg, #1fc97a, #2fe08f);
-      color: #041208;
+      border: 1px solid rgba(122, 74, 36, 0.35);
+      background: linear-gradient(135deg, #c9a227, #f0d060);
+      color: #2a1a08;
       cursor: pointer;
       font-size: 13px;
       font-family: var(--font);
       font-weight: 700;
       letter-spacing: 0.02em;
       transition: transform 0.2s, filter 0.2s, box-shadow 0.2s;
-      box-shadow: 0 4px 20px rgba(47, 224, 143, 0.25);
+      box-shadow: 0 4px 20px rgba(201, 162, 39, 0.35);
     }
     button.primary:hover {
-      filter: brightness(1.08);
-      box-shadow: 0 8px 28px rgba(47, 224, 143, 0.4);
+      filter: brightness(1.05);
+      box-shadow: 0 8px 28px rgba(201, 162, 39, 0.45);
       transform: translateY(-2px);
     }
     button.primary:active { transform: translateY(0); }
@@ -600,7 +819,7 @@
       padding: 10px;
       border-radius: 10px;
       border: 1px solid var(--border);
-      background: rgba(6, 10, 20, 0.9);
+      background: rgba(252, 246, 236, 0.98);
       color: var(--text);
       font-family: var(--mono);
       font-size: 11px;
@@ -611,8 +830,8 @@
     .export-wrap textarea:hover,
     .export-wrap textarea:focus {
       outline: none;
-      border-color: rgba(74, 232, 255, 0.35);
-      box-shadow: 0 0 0 3px rgba(74, 232, 255, 0.12);
+      border-color: rgba(201, 162, 39, 0.35);
+      box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.12);
     }
     .row-inline {
       display: flex;
@@ -628,7 +847,7 @@
       gap: 6px;
       cursor: pointer;
       font-size: 12px;
-      color: #c6d4eb;
+      color: #6b5344;
       flex: 1;
       min-width: 0;
     }
@@ -648,29 +867,29 @@
     #threeCanvas:active { cursor: grabbing; }
     code {
       font-family: var(--mono);
-      background: rgba(74, 232, 255, 0.06);
-      border: 1px solid rgba(74, 232, 255, 0.2);
+      background: rgba(255, 236, 180, 0.45);
+      border: 1px solid rgba(122, 74, 36, 0.2);
       border-radius: 6px;
       padding: 2px 7px;
-      color: #b8e8ff;
+      color: #5a3d20;
       font-size: 12px;
       transition: border-color 0.2s, background 0.2s;
     }
     code:hover {
-      border-color: rgba(74, 232, 255, 0.45);
-      background: rgba(74, 232, 255, 0.1);
+      border-color: rgba(201, 162, 39, 0.45);
+      background: rgba(201, 162, 39, 0.1);
     }
     .footer-hint {
       margin-top: 22px;
       padding: 14px 16px;
       border-radius: 14px;
-      border: 1px dashed rgba(120, 160, 230, 0.25);
-      background: rgba(10, 16, 32, 0.5);
+      border: 1px dashed rgba(122, 74, 36, 0.22);
+      background: rgba(255, 252, 246, 0.75);
       transition: border-color 0.3s, background 0.3s;
     }
     .footer-hint:hover {
-      border-color: rgba(167, 139, 250, 0.35);
-      background: rgba(16, 24, 48, 0.65);
+      border-color: rgba(201, 162, 39, 0.4);
+      background: rgba(255, 248, 230, 0.95);
     }
     .toast {
       position: fixed;
@@ -682,10 +901,10 @@
       font-size: 13px;
       font-weight: 600;
       font-family: var(--font);
-      color: #041208;
-      background: linear-gradient(135deg, #2fe08f, #1fc97a);
+      color: #2a1a08;
+      background: linear-gradient(135deg, #fff8e1, #f0d060);
       border-radius: 12px;
-      box-shadow: 0 12px 40px rgba(47, 224, 143, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.12);
+      box-shadow: 0 12px 40px rgba(201, 162, 39, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.5);
       opacity: 0;
       visibility: hidden;
       transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s, visibility 0.35s;
@@ -709,10 +928,20 @@
         transform: none;
       }
       body::after { animation: none; }
+      .ambient-fly .fly { animation: none !important; }
     }
   </style>
 </head>
 <body>
+  <div class="ambient-fly" aria-hidden="true">
+    <span class="fly f1"></span>
+    <span class="fly f2"></span>
+    <span class="fly f3"></span>
+    <span class="fly f4"></span>
+    <span class="fly f5"></span>
+    <span class="fly f6"></span>
+    <span class="fly f7"></span>
+  </div>
   <div class="wrap">
     <div class="topbar">
       <div class="brand"><span class="brand-dot"></span> Fourier Studio</div>
@@ -728,8 +957,9 @@
       <div class="hero-main">
         <h1>Fourier Epicycle Studio</h1>
         <p class="hint">
-          Upload an image: you get a live epicycle sketch, a contour mask from simplified edges, the scaled photo,
-          and a Three.js depth view of the same Fourier paths. Export Desmos equations from the left panel.
+          Upload an image: live sketch, contour mask, neon line-art preview, and a staged photo panel (reorder the four
+          cards with the handle or arrows). Three.js depth view uses the same Fourier paths. Export Desmos math from the
+          left panel.
         </p>
         <div class="hero-badges">
           <div class="mini-pill">Up to 10 contour paths</div>
@@ -741,7 +971,7 @@
         <div class="stats">
           <div class="stat">
             <div class="stat-k">Pipeline</div>
-            <div class="stat-v">Image → contours → live sketch</div>
+            <div class="stat-v">Line art → mask → sketch + photo</div>
           </div>
           <div class="stat">
             <div class="stat-k">Reconstruction</div>
@@ -765,7 +995,7 @@
         <div class="control-group">
           <h3>Input</h3>
           <div class="field-row">
-            <span style="font-size:13px;color:#d3def2;">Image file</span>
+            <span style="font-size:13px;color:#5c4838;">Image file</span>
             <div class="tip-host">
               <button type="button" class="tip-btn" aria-label="About image input">?</button>
               <div class="tip-pop" role="tooltip">PNG or JPEG works best. Processing runs in a worker so the page stays responsive.</div>
@@ -842,34 +1072,85 @@
       </div>
 
       <div class="stack">
-        <div class="visual-triple">
-          <div class="card card--lift">
+        <div id="visualDeck" class="visual-deck" aria-label="Preview panels (reorderable)">
+          <article class="card card--lift shuffle-card" data-deck="sketch" draggable="false">
             <div class="card-head">
-              <h2>Sketch</h2>
-              <span class="card-subtle">Epicycle trace (Fourier sum)</span>
+              <div>
+                <h2>Sketch</h2>
+                <span class="card-subtle">Epicycle trace (Fourier sum)</span>
+              </div>
+              <div class="shuffle-tools" aria-label="Reorder sketch panel">
+                <button type="button" class="shuffle-left" title="Move left">◀</button>
+                <button type="button" class="shuffle-right" title="Move right">▶</button>
+                <button type="button" class="shuffle-drag-handle" draggable="true" title="Drag to reorder">⠿</button>
+              </div>
             </div>
             <div class="canvas-wrap">
               <canvas id="drawCanvas" width="520" height="520"></canvas>
             </div>
-          </div>
-          <div class="card card--lift">
+          </article>
+          <article class="card card--lift shuffle-card" data-deck="contour" draggable="false">
             <div class="card-head">
-              <h2>Contour</h2>
-              <span class="card-subtle">Simplified edges to paths</span>
+              <div>
+                <h2>Contour</h2>
+                <span class="card-subtle">Binary mask used for FFT paths</span>
+              </div>
+              <div class="shuffle-tools" aria-label="Reorder contour panel">
+                <button type="button" class="shuffle-left" title="Move left">◀</button>
+                <button type="button" class="shuffle-right" title="Move right">▶</button>
+                <button type="button" class="shuffle-drag-handle" draggable="true" title="Drag to reorder">⠿</button>
+              </div>
             </div>
             <div class="canvas-wrap">
               <canvas id="edgeCanvas" width="520" height="520"></canvas>
             </div>
-          </div>
-          <div class="card card--lift card-image-live">
+          </article>
+          <article class="card card--lift shuffle-card canvas-wrap--neon" data-deck="line" draggable="false">
             <div class="card-head">
-              <h2>Image</h2>
-              <span class="card-subtle">Scaled input (worker size)</span>
+              <div>
+                <h2>Line art</h2>
+                <span class="card-subtle">Neon Sobel preview (shape-first)</span>
+              </div>
+              <div class="shuffle-tools" aria-label="Reorder line art panel">
+                <button type="button" class="shuffle-left" title="Move left">◀</button>
+                <button type="button" class="shuffle-right" title="Move right">▶</button>
+                <button type="button" class="shuffle-drag-handle" draggable="true" title="Drag to reorder">⠿</button>
+              </div>
             </div>
             <div class="canvas-wrap">
-              <canvas id="imageCanvas" width="520" height="520"></canvas>
+              <div class="canvas-wrap-inner">
+                <canvas id="lineArtCanvas" width="520" height="520"></canvas>
+              </div>
             </div>
-          </div>
+          </article>
+          <article class="card card--lift shuffle-card" data-deck="image" draggable="false">
+            <div class="card-head">
+              <div>
+                <h2>Image</h2>
+                <span class="card-subtle">Scaled input (worker size) · pipeline, then photo + SVG trace</span>
+              </div>
+              <div class="shuffle-tools" aria-label="Reorder image panel">
+                <button type="button" class="shuffle-left" title="Move left">◀</button>
+                <button type="button" class="shuffle-right" title="Move right">▶</button>
+                <button type="button" class="shuffle-drag-handle" draggable="true" title="Drag to reorder">⠿</button>
+              </div>
+            </div>
+            <div class="canvas-wrap image-stack">
+              <div class="canvas-wrap-inner">
+                <canvas id="imageCanvas" width="520" height="520"></canvas>
+                <svg
+                  id="imageSvgOverlay"
+                  class="image-svg-overlay"
+                  xmlns="http://www.w3.org/2000/svg"
+                  preserveAspectRatio="xMidYMid meet"
+                  aria-hidden="true"
+                ></svg>
+                <div id="imagePipelineOverlay" class="image-pipeline-overlay is-hidden" role="status" aria-live="polite">
+                  <span class="pipeline-step" id="imagePipelineStep"></span>
+                </div>
+              </div>
+            </div>
+          </article>
         </div>
         <div class="card card--three card--lift three-row">
           <div class="card-head">
@@ -944,10 +1225,44 @@
     const drawCtx = drawCanvas.getContext("2d");
     const edgeCanvas = document.getElementById("edgeCanvas");
     const edgeCtx = edgeCanvas.getContext("2d", { willReadFrequently: true });
+    const lineArtCanvas = document.getElementById("lineArtCanvas");
+    const lineArtCtx = lineArtCanvas ? lineArtCanvas.getContext("2d") : null;
     const imageCanvas = document.getElementById("imageCanvas");
     const imageCtx = imageCanvas.getContext("2d");
+    const imageSvgOverlay = document.getElementById("imageSvgOverlay");
+    const imagePipelineOverlay = document.getElementById("imagePipelineOverlay");
+    const imagePipelineStep = document.getElementById("imagePipelineStep");
+    const visualDeck = document.getElementById("visualDeck");
     const threeCanvas = document.getElementById("threeCanvas");
     const threeMeta = document.getElementById("threeMeta");
+
+    const DECK_KEYS = ["sketch", "contour", "line", "image"];
+    const DECK_STORAGE_KEY = "fourierVisualDeckOrder";
+    const PIPELINE_STEPS = [
+      "Removed the background",
+      "Applied edge extraction",
+      "Preserved textures",
+    ];
+
+    /** @type {string[]} */
+    let deckOrder = (() => {
+      try {
+        const raw = localStorage.getItem(DECK_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (!Array.isArray(parsed) || parsed.length !== DECK_KEYS.length) return [...DECK_KEYS];
+        const set = new Set(parsed);
+        for (const k of DECK_KEYS) {
+          if (!set.has(k)) return [...DECK_KEYS];
+        }
+        return parsed;
+      } catch (_) {
+        return [...DECK_KEYS];
+      }
+    })();
+
+    let imagePipelineToken = 0;
+    let imageRevealDone = false;
+    let deckDragKey = null;
 
     let worker = null;
     /** @type {{ freqs: Int16Array, coeffsRe: Float32Array, coeffsIm: Float32Array, N: number, termCap: number }[]} */
@@ -961,6 +1276,11 @@
     let raf = null;
     let threeReady = false;
     let threeState = null;
+
+    let lineArtAnimActive = false;
+    let lineArtAnimToken = 0;
+    /** @type {{ w: number, h: number, edges: Uint8Array } | null} */
+    let pendingContourAfterLineArt = null;
 
     function pathStroke(i, n, alpha = 1) {
       const h = (360 * i) / Math.max(1, n);
@@ -979,6 +1299,210 @@
         d[o + 3] = 255;
       }
       edgeCtx.putImageData(img, 0, 0);
+    }
+
+    function easeOutCubic(t) {
+      const u = Math.min(1, Math.max(0, t));
+      return 1 - (1 - u) ** 3;
+    }
+
+    function saveDeckOrder() {
+      try {
+        localStorage.setItem(DECK_STORAGE_KEY, JSON.stringify(deckOrder));
+      } catch (_) {}
+    }
+
+    function applyDeckOrder() {
+      if (!visualDeck) return;
+      for (let i = 0; i < deckOrder.length; i++) {
+        const el = visualDeck.querySelector(`[data-deck="${deckOrder[i]}"]`);
+        if (el) el.style.order = String(i);
+      }
+    }
+
+    function moveDeckKey(key, delta) {
+      const i = deckOrder.indexOf(key);
+      const j = i + delta;
+      if (i < 0 || j < 0 || j >= deckOrder.length) return;
+      const t = deckOrder[i];
+      deckOrder[i] = deckOrder[j];
+      deckOrder[j] = t;
+      saveDeckOrder();
+      applyDeckOrder();
+    }
+
+    function swapDeckKeys(a, b) {
+      const ia = deckOrder.indexOf(a);
+      const ib = deckOrder.indexOf(b);
+      if (ia < 0 || ib < 0 || ia === ib) return;
+      const t = deckOrder[ia];
+      deckOrder[ia] = deckOrder[ib];
+      deckOrder[ib] = t;
+      saveDeckOrder();
+      applyDeckOrder();
+    }
+
+    function resetImagePipelineUi(opts) {
+      const showOverlay = opts && opts.showOverlay;
+      imageRevealDone = false;
+      if (imageSvgOverlay) {
+        while (imageSvgOverlay.firstChild) imageSvgOverlay.removeChild(imageSvgOverlay.firstChild);
+        imageSvgOverlay.classList.remove("is-visible");
+      }
+      if (imagePipelineOverlay) {
+        imagePipelineOverlay.classList.toggle("is-hidden", !showOverlay);
+      }
+      if (imagePipelineStep) imagePipelineStep.textContent = "";
+    }
+
+    async function drawFinalPhotoToImageCanvas(w, h) {
+      imageCanvas.width = w;
+      imageCanvas.height = h;
+      imageCtx.fillStyle = "#f4ebe0";
+      imageCtx.fillRect(0, 0, w, h);
+      if (!lastFile) return;
+      try {
+        const b = await createImageBitmap(lastFile);
+        imageCtx.drawImage(b, 0, 0, w, h);
+        b.close();
+      } catch (_) {}
+    }
+
+    function flushPendingContourOnly() {
+      if (!pendingContourAfterLineArt) return;
+      const { w, h, edges } = pendingContourAfterLineArt;
+      pendingContourAfterLineArt = null;
+      edgeCanvas.width = w;
+      edgeCanvas.height = h;
+      renderEdgePreview(edges, w, h);
+    }
+
+    function rebuildSvgPreviewOverlay() {
+      if (!imageSvgOverlay || !paths.length || !imageRevealDone) {
+        if (imageSvgOverlay && !imageRevealDone) {
+          while (imageSvgOverlay.firstChild) imageSvgOverlay.removeChild(imageSvgOverlay.firstChild);
+          imageSvgOverlay.classList.remove("is-visible");
+        }
+        return;
+      }
+      const w = imgW;
+      const h = imgH;
+      imageSvgOverlay.setAttribute("viewBox", `0 0 ${w} ${h}`);
+      while (imageSvgOverlay.firstChild) imageSvgOverlay.removeChild(imageSvgOverlay.firstChild);
+      const NS = "http://www.w3.org/2000/svg";
+      const pathCount = paths.length;
+      for (let pi = 0; pi < pathCount; pi++) {
+        const cap = effectiveTerms(pi);
+        const samples = Math.max(64, Math.min(400, cap * 5));
+        let d = "";
+        for (let s = 0; s <= samples; s++) {
+          const t = (2 * Math.PI * s) / samples;
+          const p = samplePathPoint(paths[pi], t, cap);
+          const x = w / 2 + p.x;
+          const y = h / 2 + p.y;
+          d += `${s === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)} `;
+        }
+        d += "Z";
+        const path = document.createElementNS(NS, "path");
+        path.setAttribute("d", d.trim());
+        path.setAttribute("fill", "none");
+        const hue = (360 * pi) / Math.max(1, pathCount);
+        path.setAttribute("stroke", `hsla(${hue}, 82%, 58%, 0.62)`);
+        path.setAttribute("stroke-width", "1.35");
+        path.setAttribute("stroke-linejoin", "round");
+        path.setAttribute("stroke-linecap", "round");
+        imageSvgOverlay.appendChild(path);
+      }
+    }
+
+    async function finishImagePanelWithPhoto(w, h) {
+      await drawFinalPhotoToImageCanvas(w, h);
+      imageRevealDone = true;
+      rebuildSvgPreviewOverlay();
+      if (imagePipelineOverlay) imagePipelineOverlay.classList.add("is-hidden");
+      if (imageSvgOverlay) imageSvgOverlay.classList.add("is-visible");
+    }
+
+    function startImageCardPipeline(w, h) {
+      const token = imagePipelineToken;
+      imageRevealDone = false;
+      if (imageSvgOverlay) {
+        while (imageSvgOverlay.firstChild) imageSvgOverlay.removeChild(imageSvgOverlay.firstChild);
+        imageSvgOverlay.classList.remove("is-visible");
+      }
+      if (imagePipelineOverlay) imagePipelineOverlay.classList.remove("is-hidden");
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!imagePipelineStep || !imagePipelineOverlay) {
+        finishImagePanelWithPhoto(w, h).catch(() => {});
+        return;
+      }
+      if (reduce) {
+        imagePipelineStep.textContent = PIPELINE_STEPS[PIPELINE_STEPS.length - 1];
+        finishImagePanelWithPhoto(w, h).catch(() => {});
+        return;
+      }
+      let stepIndex = 0;
+      imagePipelineStep.textContent = PIPELINE_STEPS[0];
+      const stepMs = 760;
+      const id = setInterval(() => {
+        if (token !== imagePipelineToken) {
+          clearInterval(id);
+          return;
+        }
+        stepIndex += 1;
+        if (stepIndex < PIPELINE_STEPS.length) {
+          imagePipelineStep.textContent = PIPELINE_STEPS[stepIndex];
+        } else {
+          clearInterval(id);
+          finishImagePanelWithPhoto(w, h).catch(() => {});
+        }
+      }, stepMs);
+    }
+
+    function startLineArtIntro(baseRgba, w, h, onComplete) {
+      if (!lineArtCtx || !lineArtCanvas) {
+        lineArtAnimActive = false;
+        if (onComplete) onComplete();
+        return;
+      }
+      const token = ++lineArtAnimToken;
+      const t0 = performance.now();
+      const duration = 1350;
+      const base = new Uint8ClampedArray(baseRgba);
+      lineArtCanvas.width = w;
+      lineArtCanvas.height = h;
+      lineArtAnimActive = true;
+
+      function frame(now) {
+        if (token !== lineArtAnimToken) return;
+        const t = (now - t0) / duration;
+        const fade = easeOutCubic(t);
+        const sweep = easeOutCubic(t);
+        const cutY = Math.floor(h * sweep);
+        const img = lineArtCtx.createImageData(w, h);
+        const d = img.data;
+        for (let y = 0; y < h; y++) {
+          const rowOn = y < cutY ? 1 : 0;
+          for (let x = 0; x < w; x++) {
+            const i = (y * w + x) * 4;
+            const a = Math.floor(base[i + 3] * fade * rowOn);
+            d[i] = base[i];
+            d[i + 1] = base[i + 1];
+            d[i + 2] = base[i + 2];
+            d[i + 3] = a;
+          }
+        }
+        lineArtCtx.fillStyle = "#f4ebe0";
+        lineArtCtx.fillRect(0, 0, w, h);
+        lineArtCtx.putImageData(img, 0, 0);
+        if (t < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          lineArtAnimActive = false;
+          if (onComplete) onComplete();
+        }
+      }
+      requestAnimationFrame(frame);
     }
 
     function syncThreeRenderer() {
@@ -1006,7 +1530,7 @@
           "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js"
         );
         const renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, antialias: true, alpha: false });
-        renderer.setClearColor(0x02040a, 1);
+        renderer.setClearColor(0xf7ecd8, 1);
 
         const scene = new THREE.Scene();
         const aspect0 = Math.max(
@@ -1187,6 +1711,7 @@
       exportOut.value = buildDesmosExport();
       if (plainOut) plainOut.value = buildPlainTextExport();
       rebuildThreeGeometry();
+      rebuildSvgPreviewOverlay();
     }
 
     edgeSlider.oninput = () => { edgeVal.textContent = edgeSlider.value; };
@@ -1210,7 +1735,7 @@
 
     function tick() {
       raf = requestAnimationFrame(tick);
-      drawCtx.fillStyle = "#000";
+      drawCtx.fillStyle = "#f4ebe0";
       drawCtx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
       if (!paths.length) return;
 
@@ -1240,7 +1765,7 @@
           x += r * Math.cos(angle);
           y += r * Math.sin(angle);
 
-          drawCtx.strokeStyle = "rgba(120,120,120,0.22)";
+          drawCtx.strokeStyle = "rgba(90, 75, 60, 0.22)";
           drawCtx.beginPath();
           drawCtx.arc(prevX, prevY, r, 0, Math.PI * 2);
           drawCtx.stroke();
@@ -1287,6 +1812,11 @@
       if (!file) return;
       lastFile = file;
       cancelAnimationFrame(raf);
+      lineArtAnimToken += 1;
+      lineArtAnimActive = false;
+      imagePipelineToken += 1;
+      resetImagePipelineUi({ showOverlay: false });
+      pendingContourAfterLineArt = null;
       traces = [];
       tParam = 0;
       paths = [];
@@ -1297,6 +1827,8 @@
       try {
         bmp = await createImageBitmap(file);
       } catch (e) {
+        imagePipelineToken += 1;
+        resetImagePipelineUi({ showOverlay: false });
         setProgress(0, "Could not decode image. Try PNG or JPEG.");
         meta.textContent = e && e.message ? e.message : String(e);
         return;
@@ -1308,13 +1840,19 @@
 
       imageCanvas.width = targetW;
       imageCanvas.height = targetH;
-      imageCtx.fillStyle = "#03060f";
+      imageCtx.fillStyle = "#f4ebe0";
       imageCtx.fillRect(0, 0, targetW, targetH);
-      imageCtx.drawImage(bmp, 0, 0, targetW, targetH);
+
+      if (lineArtCanvas && lineArtCtx) {
+        lineArtCanvas.width = targetW;
+        lineArtCanvas.height = targetH;
+        lineArtCtx.fillStyle = "#f4ebe0";
+        lineArtCtx.fillRect(0, 0, targetW, targetH);
+      }
 
       edgeCanvas.width = targetW;
       edgeCanvas.height = targetH;
-      edgeCtx.fillStyle = "#03060f";
+      edgeCtx.fillStyle = "#f4ebe0";
       edgeCtx.fillRect(0, 0, targetW, targetH);
 
       setProgress(5, "Starting worker…");
@@ -1323,6 +1861,8 @@
       try {
         w = ensureWorker();
       } catch (e) {
+        imagePipelineToken += 1;
+        resetImagePipelineUi({ showOverlay: false });
         setProgress(0, "Could not start worker. Serve over http:// (not file://).");
         meta.textContent = e && e.message ? e.message : String(e);
         bmp.close();
@@ -1333,8 +1873,27 @@
         const msg = ev.data;
         if (msg.type === "progress") {
           setProgress(msg.percent, msg.stage || "Working…");
+        } else if (msg.type === "previewLineArt") {
+          const pw = msg.w;
+          const ph = msg.h;
+          const rgba = msg.lineArt;
+          if (!(rgba instanceof Uint8ClampedArray) || rgba.length !== pw * ph * 4) return;
+          edgeCanvas.width = pw;
+          edgeCanvas.height = ph;
+          edgeCtx.fillStyle = "#f4ebe0";
+          edgeCtx.fillRect(0, 0, pw, ph);
+          setProgress(36, "Neon line art (Line art panel)…");
+          startImageCardPipeline(pw, ph);
+          startLineArtIntro(rgba, pw, ph, () => {
+            flushPendingContourOnly();
+          });
         } else if (msg.type === "error") {
           w.removeEventListener("message", onMessage);
+          lineArtAnimToken += 1;
+          lineArtAnimActive = false;
+          imagePipelineToken += 1;
+          resetImagePipelineUi({ showOverlay: false });
+          pendingContourAfterLineArt = null;
           setProgress(0, msg.message || "Error");
           meta.textContent = "";
         } else if (msg.type === "done") {
@@ -1343,21 +1902,15 @@
           imgH = msg.h;
           drawCanvas.width = msg.w;
           drawCanvas.height = msg.h;
-          edgeCanvas.width = msg.w;
-          edgeCanvas.height = msg.h;
-          imageCanvas.width = msg.w;
-          imageCanvas.height = msg.h;
-          imageCtx.fillStyle = "#03060f";
-          imageCtx.fillRect(0, 0, msg.w, msg.h);
-          if (lastFile) {
-            createImageBitmap(lastFile).then((b) => {
-              imageCtx.drawImage(b, 0, 0, msg.w, msg.h);
-              b.close();
-            }).catch(() => {});
-          }
-
           if (msg.edgePreview) {
-            renderEdgePreview(new Uint8Array(msg.edgePreview), msg.w, msg.h);
+            pendingContourAfterLineArt = {
+              w: msg.w,
+              h: msg.h,
+              edges: new Uint8Array(msg.edgePreview),
+            };
+            if (!lineArtAnimActive) {
+              flushPendingContourOnly();
+            }
           }
 
           paths = (msg.paths || []).map((p) => ({
@@ -1439,6 +1992,57 @@
         showToast("Select plain text and copy manually (browser blocked clipboard).", 3200);
       }
     });
+
+    if (visualDeck) {
+      applyDeckOrder();
+      visualDeck.addEventListener("click", (e) => {
+        const left = e.target.closest(".shuffle-left");
+        const right = e.target.closest(".shuffle-right");
+        const card = e.target.closest(".shuffle-card");
+        if (!card || (!left && !right)) return;
+        const key = card.getAttribute("data-deck");
+        if (!key) return;
+        if (left) moveDeckKey(key, -1);
+        if (right) moveDeckKey(key, 1);
+      });
+      visualDeck.addEventListener("dragstart", (e) => {
+        const h = e.target.closest(".shuffle-drag-handle");
+        if (!h) return;
+        const card = h.closest(".shuffle-card");
+        deckDragKey = card && card.getAttribute("data-deck");
+        if (card) card.classList.add("is-dragging");
+        if (e.dataTransfer && deckDragKey) {
+          e.dataTransfer.setData("text/plain", deckDragKey);
+          e.dataTransfer.effectAllowed = "move";
+        }
+      });
+      visualDeck.addEventListener("dragend", () => {
+        visualDeck.querySelectorAll(".shuffle-card").forEach((c) => {
+          c.classList.remove("is-dragging", "is-drop-target");
+        });
+        deckDragKey = null;
+      });
+      visualDeck.addEventListener("dragover", (e) => {
+        if (!deckDragKey) return;
+        const card = e.target.closest(".shuffle-card");
+        if (!card) return;
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+        visualDeck.querySelectorAll(".shuffle-card").forEach((c) => {
+          c.classList.toggle("is-drop-target", c === card);
+        });
+      });
+      visualDeck.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const card = e.target.closest(".shuffle-card");
+        const dropKey = card && card.getAttribute("data-deck");
+        visualDeck.querySelectorAll(".shuffle-card").forEach((c) => c.classList.remove("is-drop-target"));
+        if (deckDragKey && dropKey && deckDragKey !== dropKey) {
+          swapDeckKeys(deckDragKey, dropKey);
+        }
+        deckDragKey = null;
+      });
+    }
 
     // Start animation loop once (idle until coeffs exist)
     ensureThree();

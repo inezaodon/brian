@@ -651,12 +651,6 @@
           drawCtx.beginPath();
           drawCtx.arc(prevX, prevY, r, 0, Math.PI * 2);
           drawCtx.stroke();
-
-          drawCtx.strokeStyle = pathStroke(pi, np, 0.35);
-          drawCtx.beginPath();
-          drawCtx.moveTo(prevX, prevY);
-          drawCtx.lineTo(x, y);
-          drawCtx.stroke();
         }
 
         if (!traces[pi]) traces[pi] = [];

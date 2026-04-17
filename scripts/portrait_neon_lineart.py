@@ -2,7 +2,7 @@
 """
 Portrait → clean neon line-art (OpenCV + NumPy).
 
-Pipeline lives in `cv_neon.pipeline` (shared with the Vercel Python function `api/neon_lineart.py`).
+Pipeline lives in `cv_neon.pipeline` (also used by `export_portrait_bundle.py` / `api/portrait_pipeline.py`).
 
 Usage:
   python scripts/portrait_neon_lineart.py --input photo.jpg --output neon.png

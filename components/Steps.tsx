@@ -27,7 +27,8 @@ export function Steps() {
         viewport={{ once: true }}
         className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-slate-600"
       >
-        Same layout spirit as the old Fourier Studio: sketch, contour mask, neon line art, and the image stack —{" "}
+        Same layout spirit as the old Fourier Studio: sketch, OpenCV contour mask + path, neon line art, and the image
+        stack —{" "}
         <span className="font-medium text-slate-800">reorder panels</span> with the arrows (like shuffle-left / right).
         The hero stays clean; the heavy drawing lives here and in the playground.
       </motion.p>

@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/neon_lineart.py": {
+    "api/portrait_pipeline.py": {
       "memory": 1024,
       "maxDuration": 60,
       "excludeFiles": "{.next/**,node_modules/**,legacy/**,.git/**}"

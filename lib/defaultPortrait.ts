@@ -1,11 +1,10 @@
-import { contourPathFromImageFile } from "@/lib/contourFromImage";
-import { fetchOpenCvNeonLineartAsDataUrl } from "@/lib/fetchOpenCvNeonLineart";
+import { fetchPortraitPipeline } from "@/lib/fetchPortraitPipeline";
 import { useBrianStore } from "@/lib/store";
 
 export const DEFAULT_PORTRAIT_PUBLIC_PATH = "/default-portrait.png";
 
 /**
- * Load bundled default portrait, run the same contour + line-art pipeline as uploads,
+ * Load bundled default portrait, run the OpenCV portrait bundle (path + mask + line art),
  * and push into the store (FFT origin = image center).
  */
 export async function reloadDefaultPortrait(): Promise<void> {
@@ -14,19 +13,17 @@ export async function reloadDefaultPortrait(): Promise<void> {
   const blob = await res.blob();
   const file = new File([blob], "default-portrait.png", { type: blob.type || "image/png" });
   const edgeThreshold = useBrianStore.getState().edgeThreshold;
-  const [contour, openCvLineArt] = await Promise.all([
-    contourPathFromImageFile(file, {
-      edgeThreshold,
-      maxSide: 280,
-      samplePoints: 384,
-    }),
-    fetchOpenCvNeonLineartAsDataUrl(file),
-  ]);
-  const { path, fftOrigin, width, height, edgeMaskDataUrl } = contour;
+  const bundle = await fetchPortraitPipeline(file, {
+    edgeThreshold,
+    maxSide: 280,
+    samplePoints: 384,
+  });
+  if (!bundle) throw new Error("Portrait pipeline unavailable (Python/OpenCV).");
+  const { path, fftOrigin, width, height, edgeMaskDataUrl, lineArtDataUrl } = bundle;
   useBrianStore.getState().setSourcePath(path, {
     fftOrigin,
     imageSize: { w: width, h: height },
-    lineArtDataUrl: openCvLineArt,
+    lineArtDataUrl,
     edgeMaskDataUrl,
   });
   useBrianStore.getState().setOriginalImageSrc(DEFAULT_PORTRAIT_PUBLIC_PATH);

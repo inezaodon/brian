@@ -1,7 +1,3 @@
-/** @file Re-exports the legacy-accurate contour pipeline for convenient imports. */
+/** @file Re-exports the OpenCV portrait pipeline client helper. */
 
-export {
-  contourPathFromImageFile,
-  type ContourFromImageOptions,
-  type ContourFromImageResult,
-} from "./contourFromImage";
+export { fetchPortraitPipeline, type PortraitPipelineResponse } from "./fetchPortraitPipeline";

@@ -11,9 +11,9 @@ type BrianState = {
   model: FourierModel | null;
   /** Public path or blob: URL for the raster shown next to traces. */
   originalImageSrc: string | null;
-  /** PNG data URL from OpenCV neon pipeline (`/api/neon_lineart`). */
+  /** PNG data URL from OpenCV neon layer (`/api/portrait_pipeline` bundle). */
   lineArtDataUrl: string | null;
-  /** PNG data URL: browser Sobel-percentile edge mask (same raster used to trace the DFT loop). */
+  /** PNG data URL: OpenCV Canny edge mask (same run as DFT path + neon in `/api/portrait_pipeline`). */
   edgeMaskDataUrl: string | null;
   /** Set after raster upload — echoed in Desmos export header (legacy worker size). */
   lastImageSize: { w: number; h: number } | null;

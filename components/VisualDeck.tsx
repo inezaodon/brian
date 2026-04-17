@@ -10,8 +10,8 @@ export type DeckKey = "sketch" | "contour" | "line" | "image";
 
 const META: Record<DeckKey, { title: string; subtle: string }> = {
   sketch: { title: "Sketch", subtle: "Epicycle trace (Fourier sum)" },
-  contour: { title: "Contour", subtle: "Sobel edge mask + DFT loop (same tracing as FFT)" },
-  line: { title: "Line art", subtle: "OpenCV neon (Canny contours — preview only)" },
+  contour: { title: "Contour", subtle: "OpenCV edge mask + DFT loop (same tracing as FFT)" },
+  line: { title: "Line art", subtle: "OpenCV neon (same portrait bundle as contour)" },
   image: { title: "Image", subtle: "Scaled input + DFT path in image coordinates" },
 };
 
@@ -169,8 +169,8 @@ export function VisualDeck() {
                 </svg>
               )}
               <p className="mt-2 px-4 text-center text-[11px] text-slate-600">
-                White pixels: Sobel magnitude ≥ percentile mask. Cyan: resampled loop from the largest 8-connected blob
-                (DFT input). Line art uses a separate OpenCV pipeline, so shapes can differ.
+                White pixels: OpenCV Canny edges (after the same Gaussian blur as neon). Cyan: largest outer contour,
+                arc-length resampled — this polyline is exactly what the DFT consumes.
               </p>
             </div>
           )}
@@ -185,12 +185,12 @@ export function VisualDeck() {
                 />
               ) : (
                 <div className="flex h-48 w-full items-center justify-center bg-slate-800 text-xs text-slate-400">
-                  Line art preview loads when OpenCV `/api/neon_lineart` succeeds…
+                  Line art loads when OpenCV `/api/portrait_pipeline` succeeds…
                 </div>
               )}
               <p className="absolute bottom-2 left-2 right-2 text-center text-[11px] text-slate-300">
-                OpenCV: blur → Canny (or Sobel) → findContours → glow composite. Decorative preview — not the same mask
-                as the DFT contour.
+                Same Python bundle as contour: blur → Canny → findContours → glow / HSV boost. Neon may show several
+                simplified contours; the DFT uses one largest outer loop on the Canny mask.
               </p>
             </div>
           )}

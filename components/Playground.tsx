@@ -20,9 +20,10 @@ export function Playground() {
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-cyan-800/80">Playground</p>
         <h2 className="mt-2 font-heading text-3xl font-bold text-slate-900 sm:text-4xl">Twist the prank in real time</h2>
         <p className="mx-auto mt-3 max-w-lg text-sm text-slate-600">
-          Terms, speed, toggles, stroke — everything hot-swaps. Pipeline matches your worker: 3× blur simplify, Sobel,
-          percentile mask, greedy chain, arc-length samples (see <code className="text-slate-800">Downloads/fourier-worker.js</code>
-          ).{" "}
+          Terms, speed, toggles, stroke — everything hot-swaps. New uploads run the OpenCV portrait bundle (Canny mask,
+          resampled path, neon) via <code className="text-slate-800">/api/portrait_pipeline</code>; the epicycle sketch
+          always tracks the path in the store. Legacy worker notes live in{" "}
+          <code className="text-slate-800">Downloads/fourier-worker.js</code>.{" "}
           <a href="#export" className="font-medium text-cyan-800 underline-offset-2 hover:underline">
             Desmos export &amp; plain text
           </a>{" "}

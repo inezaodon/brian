@@ -1,8 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { contourPathFromImageFile } from "@/lib/contourFromImage";
-import { fetchOpenCvNeonLineartAsDataUrl } from "@/lib/fetchOpenCvNeonLineart";
+import { fetchPortraitPipeline } from "@/lib/fetchPortraitPipeline";
 import { useBrianStore } from "@/lib/store";
 import { useState } from "react";
 
@@ -80,8 +79,8 @@ export function Controls() {
           className="mt-2 w-full accent-emerald-600"
         />
         <p className="mt-1 text-[11px] leading-snug text-slate-600">
-          After blur, Sobel magnitudes are split by a sampled percentile (legacy 20–255). Higher → fewer, stronger
-          edges — good for cleaning noisy photos before the largest contour is traced. Applies on the next upload.
+          Mapped into OpenCV Canny high/low (20–255 → stricter edges when higher). Applies on the next upload to the
+          Python portrait bundle (mask, DFT path, neon).
         </p>
       </div>
       <div className="space-y-3 text-sm text-slate-700">
@@ -113,26 +112,25 @@ export function Controls() {
             try {
               objectUrl = URL.createObjectURL(f);
               setOriginalImageSrc(objectUrl);
-              const [contour, openCvLineArt] = await Promise.all([
-                contourPathFromImageFile(f, {
-                  edgeThreshold,
-                  maxSide: 280,
-                  samplePoints: 384,
-                }),
-                fetchOpenCvNeonLineartAsDataUrl(f),
-              ]);
-              const { path, fftOrigin, width, height, edgeMaskDataUrl } = contour;
+              const bundle = await fetchPortraitPipeline(f, {
+                edgeThreshold,
+                maxSide: 280,
+                samplePoints: 384,
+              });
+              if (!bundle) {
+                if (objectUrl) URL.revokeObjectURL(objectUrl);
+                setOriginalImageSrc(null);
+                setMsg("Portrait pipeline failed (install Python deps: pip install -r requirements.txt, then restart dev).");
+                return;
+              }
+              const { path, fftOrigin, width, height, edgeMaskDataUrl, lineArtDataUrl } = bundle;
               setSourcePath(path, {
                 fftOrigin,
                 imageSize: { w: width, h: height },
-                lineArtDataUrl: openCvLineArt,
+                lineArtDataUrl,
                 edgeMaskDataUrl,
               });
-              setMsg(
-                openCvLineArt
-                  ? "Contour traced; neon preview from OpenCV portrait pipeline."
-                  : "Contour traced. OpenCV neon preview unavailable (install Python deps and ensure /api/neon_lineart works).",
-              );
+              setMsg("OpenCV portrait bundle: Canny mask, DFT path, and neon line art.");
             } catch {
               if (objectUrl) URL.revokeObjectURL(objectUrl);
               setOriginalImageSrc(null);

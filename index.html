@@ -4,64 +4,146 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fourier Epicycle Portrait</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #050913;
+      --bg: #040814;
       --bg-soft: #0a1120;
-      --card: rgba(13, 20, 37, 0.82);
-      --card-2: rgba(20, 30, 52, 0.9);
-      --border: rgba(133, 161, 215, 0.22);
-      --muted: #a9b8d2;
-      --text: #eef3ff;
-      --accent: #5fd7ff;
-      --accent-2: #8d78ff;
-      --green: #4fd086;
-      --shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
-      --radius: 16px;
+      --card: rgba(12, 18, 36, 0.88);
+      --card-2: rgba(18, 28, 52, 0.92);
+      --border: rgba(120, 160, 230, 0.2);
+      --muted: #9eb0d4;
+      --text: #f2f6ff;
+      --accent: #4ae8ff;
+      --accent-2: #a78bfa;
+      --accent-warm: #ff8c6b;
+      --green: #3ee89f;
+      --magenta: #e879f9;
+      --shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      --shadow-glow: 0 0 0 1px rgba(74, 232, 255, 0.12), 0 16px 50px rgba(74, 232, 255, 0.08);
+      --radius: 18px;
+      --font: "Outfit", system-ui, -apple-system, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
     }
     * { box-sizing: border-box; }
     body {
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: var(--font);
       margin: 0;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.4;
+      line-height: 1.45;
       min-height: 100vh;
       background-image:
-        radial-gradient(1200px 600px at 80% -10%, rgba(95, 215, 255, 0.14), transparent 60%),
-        radial-gradient(1000px 500px at 15% -20%, rgba(141, 120, 255, 0.18), transparent 60%),
-        linear-gradient(180deg, #050913 0%, #060b16 60%, #04070f 100%);
+        radial-gradient(ellipse 900px 500px at 75% -5%, rgba(74, 232, 255, 0.12), transparent 55%),
+        radial-gradient(ellipse 800px 420px at 10% 0%, rgba(167, 139, 250, 0.14), transparent 50%),
+        radial-gradient(ellipse 600px 400px at 90% 100%, rgba(232, 121, 249, 0.06), transparent 45%),
+        linear-gradient(185deg, #03060f 0%, #070d1a 45%, #030510 100%);
     }
-    .wrap { max-width: 1260px; margin: 0 auto; padding: 18px 16px 28px; }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(100, 140, 220, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(100, 140, 220, 0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 15%, transparent 75%);
+      z-index: 0;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(74, 232, 255, 0.07), transparent 55%);
+      animation: aurora 14s ease-in-out infinite alternate;
+      z-index: 0;
+    }
+    @keyframes aurora {
+      0% { opacity: 0.55; transform: scale(1) translate(0, 0); }
+      100% { opacity: 1; transform: scale(1.05) translate(2%, 1%); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      body::after { animation: none; }
+    }
+    .wrap { position: relative; z-index: 1; max-width: 1260px; margin: 0 auto; padding: 18px 16px 32px; }
     .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
     }
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
+      gap: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      font-size: 1.05rem;
+      cursor: default;
+      transition: transform 0.25s ease, filter 0.25s ease;
     }
+    .brand:hover { transform: translateY(-1px); filter: brightness(1.08); }
     .brand-dot {
-      width: 11px;
-      height: 11px;
+      width: 12px;
+      height: 12px;
       border-radius: 999px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      box-shadow: 0 0 14px rgba(95, 215, 255, 0.7);
+      background: conic-gradient(from 200deg, var(--accent), var(--accent-2), var(--magenta), var(--accent));
+      box-shadow:
+        0 0 18px rgba(74, 232, 255, 0.65),
+        0 0 28px rgba(167, 139, 250, 0.35);
+      animation: pulse-dot 3s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { box-shadow: 0 0 18px rgba(74, 232, 255, 0.55), 0 0 28px rgba(167, 139, 250, 0.3); }
+      50% { box-shadow: 0 0 26px rgba(74, 232, 255, 0.85), 0 0 36px rgba(232, 121, 249, 0.35); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .brand-dot { animation: none; }
+    }
+    .top-links {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .top-link {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      transition: color 0.2s, border-color 0.2s, background 0.2s, transform 0.2s;
+    }
+    .top-link:hover {
+      color: var(--accent);
+      border-color: rgba(74, 232, 255, 0.35);
+      background: rgba(74, 232, 255, 0.06);
+      transform: translateY(-1px);
     }
     .top-meta {
       font-size: 12px;
+      font-weight: 600;
       color: var(--muted);
-      padding: 7px 10px;
+      padding: 8px 14px;
       border-radius: 999px;
       border: 1px solid var(--border);
-      background: rgba(18, 29, 51, 0.62);
-      backdrop-filter: blur(5px);
+      background: rgba(14, 22, 42, 0.75);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-glow);
+      transition: border-color 0.25s, box-shadow 0.25s, color 0.25s;
+    }
+    .top-meta:hover {
+      color: var(--text);
+      border-color: rgba(74, 232, 255, 0.35);
+      box-shadow: 0 0 0 1px rgba(74, 232, 255, 0.2), 0 12px 36px rgba(0, 0, 0, 0.35);
     }
     .hero {
       display: grid;
@@ -72,19 +154,29 @@
     .hero-main, .hero-side {
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      background: linear-gradient(180deg, rgba(17, 27, 48, 0.72), rgba(11, 18, 33, 0.8));
-      backdrop-filter: blur(10px);
+      background: linear-gradient(165deg, rgba(18, 28, 52, 0.92), rgba(8, 14, 28, 0.88));
+      backdrop-filter: blur(14px);
       box-shadow: var(--shadow);
-      padding: 16px;
+      padding: 18px 18px 16px;
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .hero-main:hover, .hero-side:hover {
+      border-color: rgba(74, 232, 255, 0.28);
+      box-shadow: var(--shadow), 0 0 50px rgba(74, 232, 255, 0.06);
+      transform: translateY(-2px);
     }
     h1 {
-      font-size: clamp(1.4rem, 1.2rem + 1vw, 2.05rem);
-      font-weight: 760;
-      margin: 0 0 8px;
-      letter-spacing: 0.2px;
-      line-height: 1.15;
+      font-size: clamp(1.55rem, 1.2rem + 1.2vw, 2.28rem);
+      font-weight: 800;
+      margin: 0 0 10px;
+      letter-spacing: -0.02em;
+      line-height: 1.12;
+      background: linear-gradient(120deg, #fff 0%, #c8e8ff 35%, var(--accent) 55%, var(--accent-2) 85%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
-    .hint { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.62; max-width: 760px; }
+    .hint { font-size: 13.5px; color: var(--muted); margin: 0; line-height: 1.68; max-width: 760px; }
     .hero-badges {
       margin-top: 14px;
       display: flex;
@@ -92,14 +184,22 @@
       flex-wrap: wrap;
     }
     .mini-pill {
-      padding: 7px 10px;
+      padding: 7px 12px;
       border-radius: 999px;
-      background: rgba(95, 215, 255, 0.08);
-      border: 1px solid rgba(95, 215, 255, 0.28);
+      background: linear-gradient(135deg, rgba(74, 232, 255, 0.1), rgba(167, 139, 250, 0.08));
+      border: 1px solid rgba(74, 232, 255, 0.32);
       color: var(--accent);
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
       white-space: nowrap;
+      cursor: default;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s;
+    }
+    .mini-pill:hover {
+      transform: translateY(-2px) scale(1.02);
+      border-color: rgba(74, 232, 255, 0.55);
+      box-shadow: 0 8px 24px rgba(74, 232, 255, 0.12);
     }
     .stats {
       display: grid;
@@ -109,8 +209,14 @@
     .stat {
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 10px;
-      background: rgba(16, 25, 43, 0.74);
+      padding: 11px 12px;
+      background: rgba(12, 20, 40, 0.65);
+      transition: border-color 0.25s, background 0.25s, transform 0.2s;
+    }
+    .stat:hover {
+      border-color: rgba(167, 139, 250, 0.35);
+      background: rgba(20, 32, 58, 0.85);
+      transform: translateX(4px);
     }
     .stat-k {
       font-size: 11px;
@@ -140,9 +246,59 @@
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 14px;
+      padding: 15px;
       box-shadow: var(--shadow);
-      backdrop-filter: blur(7px);
+      backdrop-filter: blur(12px);
+      transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .card--lift:hover {
+      border-color: rgba(120, 160, 230, 0.38);
+      box-shadow: var(--shadow), 0 0 0 1px rgba(74, 232, 255, 0.08), 0 20px 50px rgba(0, 0, 0, 0.35);
+      transform: translateY(-3px);
+    }
+    .card--three {
+      position: relative;
+      overflow: hidden;
+      border-color: rgba(74, 232, 255, 0.22);
+      background: linear-gradient(165deg, rgba(14, 22, 44, 0.95), rgba(8, 14, 30, 0.9));
+    }
+    .card--three::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(74, 232, 255, 0.45), rgba(167, 139, 250, 0.25), rgba(232, 121, 249, 0.2));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0.65;
+      transition: opacity 0.4s ease;
+    }
+    .card--three:hover::before { opacity: 1; }
+    .card--three .card-head { position: relative; z-index: 1; }
+    .card--three canvas { position: relative; z-index: 1; }
+    .card--three .mono { position: relative; z-index: 1; }
+    .live-badge {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, rgba(74, 232, 255, 0.2), rgba(167, 139, 250, 0.15));
+      color: var(--accent);
+      border: 1px solid rgba(74, 232, 255, 0.35);
+      animation: badge-pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes badge-pulse {
+      0%, 100% { opacity: 0.85; }
+      50% { opacity: 1; box-shadow: 0 0 14px rgba(74, 232, 255, 0.25); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .live-badge { animation: none; }
     }
     .card h2 {
       font-size: 0.95rem;
@@ -158,15 +314,54 @@
       gap: 8px;
       margin-bottom: 10px;
     }
-    .card-subtle { font-size: 12px; color: var(--muted); }
-    canvas { width: 100%; background: #03060f; border-radius: 10px; display: block; border: 1px solid rgba(126, 148, 196, 0.25); }
+    .card-subtle { font-size: 12px; color: var(--muted); transition: color 0.25s; }
+    .card--lift:hover .card-subtle { color: #b8c8e8; }
+    .canvas-wrap {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: box-shadow 0.35s ease;
+    }
+    .canvas-wrap::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(145deg, rgba(74, 232, 255, 0.25), transparent 40%, rgba(167, 139, 250, 0.15));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0.5;
+      transition: opacity 0.35s;
+    }
+    .card--lift:hover .canvas-wrap::after { opacity: 0.95; }
+    canvas {
+      width: 100%;
+      background: radial-gradient(ellipse 80% 80% at 50% 40%, #0a1224 0%, #03060f 100%);
+      border-radius: 10px;
+      display: block;
+      border: 1px solid rgba(100, 120, 180, 0.2);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .card--lift:hover canvas {
+      border-color: rgba(74, 232, 255, 0.28);
+      box-shadow: inset 0 0 40px rgba(74, 232, 255, 0.04);
+    }
     .controls-panel { position: sticky; top: 16px; }
     .control-group {
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px;
+      border-radius: 14px;
+      padding: 12px;
       background: var(--card-2);
       margin-bottom: 10px;
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.25s;
+    }
+    .control-group:hover {
+      border-color: rgba(120, 160, 230, 0.38);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
     }
     .control-group h3 {
       margin: 0 0 8px;
@@ -177,19 +372,111 @@
     }
     label { display: block; margin-top: 10px; font-size: 13px; color: #d3def2; }
     label:first-of-type { margin-top: 0; }
+    .field-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .field-row:first-child { margin-top: 0; }
+    .field-row label {
+      margin-top: 0;
+      flex: 1;
+      min-width: 0;
+    }
+    .field-val {
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+      text-shadow: 0 0 20px rgba(74, 232, 255, 0.35);
+    }
+    .tip-host {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .tip-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(74, 232, 255, 0.35);
+      background: rgba(74, 232, 255, 0.08);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1;
+      cursor: help;
+      transition: transform 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .tip-btn:hover {
+      transform: scale(1.12);
+      background: rgba(74, 232, 255, 0.18);
+      border-color: rgba(74, 232, 255, 0.65);
+      box-shadow: 0 0 16px rgba(74, 232, 255, 0.25);
+    }
+    .tip-host:focus-within .tip-pop,
+    .tip-host:hover .tip-pop {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+    }
+    .tip-pop {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 8px);
+      width: min(260px, 70vw);
+      padding: 10px 12px;
+      font-size: 11.5px;
+      font-weight: 500;
+      line-height: 1.45;
+      color: #e0e8f8;
+      background: linear-gradient(165deg, rgba(22, 32, 58, 0.98), rgba(12, 18, 36, 0.98));
+      border: 1px solid rgba(74, 232, 255, 0.28);
+      border-radius: 12px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(6px) scale(0.98);
+      transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s;
+      z-index: 50;
+      pointer-events: none;
+    }
+    .tip-pop::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      right: 10px;
+      border: 7px solid transparent;
+      border-top-color: rgba(22, 32, 58, 0.98);
+    }
     input[type="range"] {
       width: 100%;
       margin-top: 6px;
       accent-color: var(--accent);
+      border-radius: 999px;
+      height: 6px;
+      cursor: pointer;
+    }
+    input[type="range"]:hover {
+      filter: brightness(1.1);
     }
     input[type="file"] {
       width: 100%;
       font-size: 13px;
+      font-family: var(--font);
       color: var(--muted);
       border: 1px dashed rgba(133, 161, 215, 0.35);
       border-radius: 10px;
-      padding: 8px;
+      padding: 10px;
       background: rgba(8, 14, 25, 0.65);
+      cursor: pointer;
+      transition: border-color 0.25s, background 0.25s, color 0.25s;
+    }
+    input[type="file"]:hover {
+      border-color: rgba(74, 232, 255, 0.45);
+      background: rgba(74, 232, 255, 0.06);
+      color: var(--text);
     }
     .status {
       margin-top: 10px;
@@ -212,7 +499,7 @@
       transition: width 0.15s ease;
     }
     .mono {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-family: var(--mono);
       font-size: 11px;
       color: var(--muted);
       margin-top: 8px;
@@ -221,52 +508,158 @@
     }
     .button-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
     button.secondary {
-      padding: 8px 12px;
-      border-radius: 8px;
+      padding: 9px 14px;
+      border-radius: 10px;
       border: 1px solid var(--border);
-      background: linear-gradient(180deg, #192438, #151f31);
+      background: linear-gradient(180deg, rgba(28, 40, 68, 0.95), rgba(18, 26, 48, 0.98));
       color: var(--text);
       cursor: pointer;
       font-size: 13px;
-      transition: background 0.18s ease, border-color 0.18s ease;
+      font-family: var(--font);
+      font-weight: 600;
+      transition: transform 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
     }
-    button.secondary:hover { background: #273955; border-color: #4f73aa; }
+    button.secondary:hover {
+      background: linear-gradient(180deg, #2a3d62, #1e2c4a);
+      border-color: rgba(74, 232, 255, 0.35);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      transform: translateY(-1px);
+    }
+    button.secondary:active { transform: translateY(0); }
     button.primary {
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 1px solid #34b97a;
-      background: linear-gradient(135deg, #28a567, #38c27f);
-      color: #fff;
+      padding: 9px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(62, 232, 159, 0.45);
+      background: linear-gradient(135deg, #1fc97a, #2fe08f);
+      color: #041208;
       cursor: pointer;
       font-size: 13px;
-      transition: background 0.18s ease;
+      font-family: var(--font);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      transition: transform 0.2s, filter 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(47, 224, 143, 0.25);
     }
-    button.primary:hover { background: linear-gradient(135deg, #2fb574, #44cf8d); }
+    button.primary:hover {
+      filter: brightness(1.08);
+      box-shadow: 0 8px 28px rgba(47, 224, 143, 0.4);
+      transform: translateY(-2px);
+    }
+    button.primary:active { transform: translateY(0); }
     .export-wrap { margin-top: 12px; }
     .export-wrap textarea {
       width: 100%;
       min-height: 150px;
       margin-top: 8px;
       padding: 10px;
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid var(--border);
-      background: #0a111d;
+      background: rgba(6, 10, 20, 0.9);
       color: var(--text);
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-family: var(--mono);
       font-size: 11px;
-      line-height: 1.4;
+      line-height: 1.45;
       resize: vertical;
+      transition: border-color 0.25s, box-shadow 0.25s;
     }
-    .row-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 8px; }
-    .row-inline label { margin-top: 0; display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; color: #c6d4eb; }
-    #threeCanvas { height: 320px; }
-    code {
-      background: #0f1a2c;
-      border: 1px solid rgba(133, 161, 215, 0.32);
-      border-radius: 5px;
-      padding: 1px 5px;
-      color: #cde6ff;
+    .export-wrap textarea:hover,
+    .export-wrap textarea:focus {
+      outline: none;
+      border-color: rgba(74, 232, 255, 0.35);
+      box-shadow: 0 0 0 3px rgba(74, 232, 255, 0.12);
+    }
+    .row-inline {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .row-inline label {
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
       font-size: 12px;
+      color: #c6d4eb;
+      flex: 1;
+      min-width: 0;
+    }
+    @media (max-width: 640px) {
+      .topbar { flex-direction: column; align-items: stretch; }
+      .top-links { justify-content: center; }
+      .top-meta { text-align: center; }
+    }
+    #threeCanvas {
+      height: 320px;
+      cursor: grab;
+      touch-action: none;
+    }
+    #threeCanvas:active { cursor: grabbing; }
+    code {
+      font-family: var(--mono);
+      background: rgba(74, 232, 255, 0.06);
+      border: 1px solid rgba(74, 232, 255, 0.2);
+      border-radius: 6px;
+      padding: 2px 7px;
+      color: #b8e8ff;
+      font-size: 12px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    code:hover {
+      border-color: rgba(74, 232, 255, 0.45);
+      background: rgba(74, 232, 255, 0.1);
+    }
+    .footer-hint {
+      margin-top: 22px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px dashed rgba(120, 160, 230, 0.25);
+      background: rgba(10, 16, 32, 0.5);
+      transition: border-color 0.3s, background 0.3s;
+    }
+    .footer-hint:hover {
+      border-color: rgba(167, 139, 250, 0.35);
+      background: rgba(16, 24, 48, 0.65);
+    }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120%);
+      z-index: 100;
+      padding: 12px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font);
+      color: #041208;
+      background: linear-gradient(135deg, #2fe08f, #1fc97a);
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(47, 224, 143, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.12);
+      opacity: 0;
+      visibility: hidden;
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s, visibility 0.35s;
+      pointer-events: none;
+      max-width: min(420px, 92vw);
+      text-align: center;
+    }
+    .toast.is-visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .card--lift:hover,
+      .hero-main:hover,
+      .hero-side:hover,
+      .mini-pill:hover,
+      .stat:hover,
+      button.primary:hover,
+      button.secondary:hover {
+        transform: none;
+      }
+      body::after { animation: none; }
     }
   </style>
 </head>
@@ -274,7 +667,12 @@
   <div class="wrap">
     <div class="topbar">
       <div class="brand"><span class="brand-dot"></span> Fourier Studio</div>
-      <div class="top-meta">Interactive sparse FFT visualizer</div>
+      <div class="top-links">
+        <a class="top-link" href="https://threejs.org/" target="_blank" rel="noopener noreferrer">Three.js</a>
+        <a class="top-link" href="https://threejs.org/docs/" target="_blank" rel="noopener noreferrer">Docs</a>
+        <a class="top-link" href="https://threejs.org/examples/" target="_blank" rel="noopener noreferrer">Examples</a>
+      </div>
+      <div class="top-meta">Sparse FFT · WebGL · Workers</div>
     </div>
 
     <div class="hero">
@@ -309,14 +707,21 @@
     </div>
 
     <div class="layout">
-      <div class="card controls-panel">
+      <div class="card controls-panel card--lift">
         <div class="card-head">
           <h2>Controls</h2>
-          <span class="card-subtle">Live adjustable</span>
+          <span class="card-subtle">Hover sliders · ? popovers</span>
         </div>
 
         <div class="control-group">
           <h3>Input</h3>
+          <div class="field-row">
+            <span style="font-size:13px;color:#d3def2;">Image file</span>
+            <div class="tip-host">
+              <button type="button" class="tip-btn" aria-label="About image input">?</button>
+              <div class="tip-pop" role="tooltip">PNG or JPEG works best. Processing runs in a worker so the page stays responsive.</div>
+            </div>
+          </div>
           <input id="file" type="file" accept="image/*" />
           <div class="button-row">
             <button type="button" class="secondary" id="reprocess">Re-run with current settings</button>
@@ -325,16 +730,48 @@
 
         <div class="control-group">
           <h3>Processing</h3>
-          <label>Edge threshold: <span id="edgeVal">120</span></label>
+          <div class="field-row">
+            <label for="edge">Edge threshold</label>
+            <span class="field-val" id="edgeVal">120</span>
+            <div class="tip-host">
+              <button type="button" class="tip-btn" aria-label="Edge threshold help">?</button>
+              <div class="tip-pop" role="tooltip">After blur‑simplifying the image, edges use a percentile of Sobel strength. Higher = fewer, stronger edges—usually cleaner “key figure” contours.</div>
+            </div>
+          </div>
           <input id="edge" type="range" min="20" max="255" value="120" />
-          <label>Max sample points total: <span id="maxPtsVal">2000</span></label>
+          <div class="field-row">
+            <label for="maxPts">Max sample points (shared)</label>
+            <span class="field-val" id="maxPtsVal">2000</span>
+            <div class="tip-host">
+              <button type="button" class="tip-btn" aria-label="Sample points help">?</button>
+              <div class="tip-pop" role="tooltip">Total points split across paths. More samples = smoother geometry and heavier FFT work.</div>
+            </div>
+          </div>
           <input id="maxPts" type="range" min="800" max="4000" step="100" value="2000" />
-          <label>Terms (harmonics cap): <span id="termsVal">180</span></label>
+          <div class="field-row">
+            <label for="terms">Terms (harmonics cap)</label>
+            <span class="field-val" id="termsVal">180</span>
+            <div class="tip-host">
+              <button type="button" class="tip-btn" aria-label="Harmonics help">?</button>
+              <div class="tip-pop" role="tooltip">Sparse Fourier terms kept per path. Raise for sharper traces; lower for faster, smoother motion.</div>
+            </div>
+          </div>
           <input id="terms" type="range" min="1" max="400" value="180" />
           <div class="row-inline">
-            <label><input type="checkbox" id="perPathCaps" checked /> Use per-path term caps (200 / 120 / 40 / …)</label>
+            <label><input type="checkbox" id="perPathCaps" checked /> Per-path term caps (200 / 120 / 40 …)</label>
+            <div class="tip-host" style="margin-left:auto;">
+              <button type="button" class="tip-btn" aria-label="Per-path caps help">?</button>
+              <div class="tip-pop" role="tooltip" style="right:auto;left:0;">Largest contours get more harmonics so big shapes stay accurate without wasting terms on tiny regions.</div>
+            </div>
           </div>
-          <label>Animation speed: <span id="speedVal">1.0</span></label>
+          <div class="field-row">
+            <label for="speed">Animation speed</label>
+            <span class="field-val" id="speedVal">1.0</span>
+            <div class="tip-host">
+              <button type="button" class="tip-btn" aria-label="Speed help">?</button>
+              <div class="tip-pop" role="tooltip">How fast the epicycle phase sweeps through one full period (scaled by the FFT reference size).</div>
+            </div>
+          </div>
           <input id="speed" type="range" min="0.2" max="3" step="0.1" value="1.0" />
         </div>
 
@@ -357,36 +794,44 @@
 
       <div class="stack">
         <div class="visual-grid">
-          <div class="card">
+          <div class="card card--lift">
             <div class="card-head">
               <h2>Edge Preview</h2>
-              <span class="card-subtle">Contour extraction</span>
+              <span class="card-subtle">Line art → contour mask</span>
             </div>
-            <canvas id="edgeCanvas" width="520" height="520"></canvas>
+            <div class="canvas-wrap">
+              <canvas id="edgeCanvas" width="520" height="520"></canvas>
+            </div>
           </div>
-          <div class="card">
+          <div class="card card--lift">
             <div class="card-head">
               <h2>Epicycle Trace</h2>
               <span class="card-subtle">Sparse Fourier reconstruction</span>
             </div>
-            <canvas id="drawCanvas" width="520" height="520"></canvas>
+            <div class="canvas-wrap">
+              <canvas id="drawCanvas" width="520" height="520"></canvas>
+            </div>
           </div>
         </div>
-        <div class="card">
+        <div class="card card--three card--lift">
           <div class="card-head">
-            <h2>Three.js 3D Contour View</h2>
-            <span class="card-subtle">Current harmonics in depth</span>
+            <h2>Three.js · contour depth</h2>
+            <span class="live-badge">WebGL</span>
           </div>
-          <canvas id="threeCanvas" width="960" height="320"></canvas>
-          <div class="mono" id="threeMeta">3D view idle.</div>
+          <div class="canvas-wrap">
+            <canvas id="threeCanvas" width="960" height="320"></canvas>
+          </div>
+          <div class="mono" id="threeMeta">3D view — drag to orbit, scroll to zoom after processing.</div>
         </div>
       </div>
     </div>
 
-    <p class="hint" style="margin-top:20px;">
-      Local server (from this folder): <code>python3 -m http.server 8765</code> then open <code>http://localhost:8765/</code>.
+    <p class="hint footer-hint">
+      Serve locally so the worker loads: <code>python3 -m http.server 8765</code> → <code>http://localhost:8765/</code>
     </p>
   </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script type="module">
     const fileInput = document.getElementById("file");
@@ -407,6 +852,18 @@
     const statusEl = document.getElementById("status");
     const bar = document.getElementById("bar");
     const meta = document.getElementById("meta");
+    const toastEl = document.getElementById("toast");
+    let toastHideTimer = 0;
+
+    function showToast(message, ms = 2400) {
+      if (!toastEl) return;
+      toastEl.textContent = message;
+      toastEl.classList.add("is-visible");
+      clearTimeout(toastHideTimer);
+      toastHideTimer = setTimeout(() => {
+        toastEl.classList.remove("is-visible");
+      }, ms);
+    }
 
     const edgeCanvas = document.getElementById("edgeCanvas");
     const edgeCtx = edgeCanvas.getContext("2d", { willReadFrequently: true });
@@ -428,6 +885,13 @@
     let threeReady = false;
     let threeState = null;
 
+    let lineArtAnimActive = false;
+    let lineArtAnimToken = 0;
+    /** @type {Uint8Array | null} */
+    let pendingContourEdges = null;
+    let pendingContourW = 0;
+    let pendingContourH = 0;
+
     function pathStroke(i, n, alpha = 1) {
       const h = (360 * i) / Math.max(1, n);
       return `hsla(${h}, 82%, 58%, ${alpha})`;
@@ -437,10 +901,13 @@
       if (threeReady && threeState) return;
       try {
         const THREE = await import("https://unpkg.com/three@0.184.0/build/three.module.js");
+        const { OrbitControls } = await import(
+          "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js"
+        );
         const renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, antialias: true, alpha: false });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.setSize(threeCanvas.clientWidth, threeCanvas.clientHeight, false);
-        renderer.setClearColor(0x000000, 1);
+        renderer.setClearColor(0x02040a, 1);
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(
@@ -452,15 +919,24 @@
         camera.position.set(0, -220, 520);
         camera.lookAt(0, 0, 0);
 
-        const ambient = new THREE.AmbientLight(0xffffff, 0.9);
-        scene.add(ambient);
-
         const group = new THREE.Group();
         scene.add(group);
 
-        threeState = { THREE, renderer, scene, camera, group };
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.055;
+        controls.target.set(0, 0, 0);
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.35;
+        controls.minDistance = 180;
+        controls.maxDistance = 2400;
+        controls.maxPolarAngle = Math.PI * 0.92;
+        controls.screenSpacePanning = true;
+
+        threeState = { THREE, renderer, scene, camera, group, controls };
         threeReady = true;
-        threeMeta.textContent = "Three.js loaded. 3D contours will appear after processing.";
+        threeMeta.textContent =
+          "Ready — drag to orbit, scroll to zoom (idle auto-rotate). Process an image to see contours.";
       } catch (err) {
         threeMeta.textContent = `Three.js failed to load: ${err && err.message ? err.message : String(err)}`;
       }
@@ -505,7 +981,7 @@
         if (obj.material) obj.material.dispose();
       }
       if (!paths.length) {
-        threeMeta.textContent = "3D view idle.";
+        threeMeta.textContent = "3D idle — upload & process to stack contour loops in depth.";
         return;
       }
 
@@ -531,7 +1007,7 @@
         const line = new THREE.LineLoop(geom, mat);
         group.add(line);
       }
-      threeMeta.textContent = `3D showing ${pathCount} loop(s) with current harmonics.`;
+      threeMeta.textContent = `Showing ${pathCount} contour loop(s) · drag to orbit · scroll to zoom · harmonics follow the Terms slider.`;
     }
 
     function buildDesmosExport() {
@@ -588,12 +1064,13 @@
     speedSlider.oninput = () => { speedVal.textContent = Number(speedSlider.value).toFixed(1); };
     window.addEventListener("resize", () => {
       if (!threeReady || !threeState) return;
-      const { renderer, camera } = threeState;
+      const { renderer, camera, controls } = threeState;
       const w = Math.max(200, threeCanvas.clientWidth);
       const h = Math.max(160, threeCanvas.clientHeight);
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      controls.update();
     });
 
     function setProgress(pct, msg) {
@@ -613,6 +1090,51 @@
         d[o + 3] = 255;
       }
       edgeCtx.putImageData(img, 0, 0);
+    }
+
+    function easeOutCubic(t) {
+      const u = Math.min(1, Math.max(0, t));
+      return 1 - (1 - u) ** 3;
+    }
+
+    /**
+     * Fade + top-to-bottom reveal of simplified Sobel line art (cyan on dark), then run onComplete.
+     */
+    function startLineArtIntro(baseRgba, w, h, onComplete) {
+      const token = ++lineArtAnimToken;
+      const t0 = performance.now();
+      const duration = 1250;
+      const base = new Uint8ClampedArray(baseRgba);
+
+      function frame(now) {
+        if (token !== lineArtAnimToken) return;
+        const t = (now - t0) / duration;
+        const fade = easeOutCubic(t);
+        const sweep = easeOutCubic(t);
+        const cutY = Math.floor(h * sweep);
+        const img = edgeCtx.createImageData(w, h);
+        const d = img.data;
+        for (let y = 0; y < h; y++) {
+          const rowOn = y < cutY ? 1 : 0;
+          for (let x = 0; x < w; x++) {
+            const i = (y * w + x) * 4;
+            const a = Math.floor(base[i + 3] * fade * rowOn);
+            d[i] = base[i];
+            d[i + 1] = base[i + 1];
+            d[i + 2] = base[i + 2];
+            d[i + 3] = a;
+          }
+        }
+        edgeCtx.fillStyle = "#03060f";
+        edgeCtx.fillRect(0, 0, w, h);
+        edgeCtx.putImageData(img, 0, 0);
+        if (t < 1) {
+          requestAnimationFrame(frame);
+        } else if (onComplete) {
+          onComplete();
+        }
+      }
+      requestAnimationFrame(frame);
     }
 
     function tick() {
@@ -679,9 +1201,8 @@
       }
 
       if (threeReady && threeState) {
-        const { renderer, scene, camera, group } = threeState;
-        group.rotation.z += 0.003;
-        group.rotation.x = -0.6;
+        const { renderer, scene, camera, controls } = threeState;
+        controls.update();
         renderer.render(scene, camera);
       }
     }
@@ -696,6 +1217,9 @@
       if (!file) return;
       lastFile = file;
       cancelAnimationFrame(raf);
+      lineArtAnimToken += 1;
+      lineArtAnimActive = false;
+      pendingContourEdges = null;
       traces = [];
       tParam = 0;
       paths = [];
@@ -731,21 +1255,48 @@
         const msg = ev.data;
         if (msg.type === "progress") {
           setProgress(msg.percent, msg.stage || "Working…");
+        } else if (msg.type === "previewLineArt") {
+          const pw = msg.w;
+          const ph = msg.h;
+          const rgba = msg.lineArt;
+          if (!(rgba instanceof Uint8ClampedArray) || rgba.length !== pw * ph * 4) return;
+          edgeCanvas.width = pw;
+          edgeCanvas.height = ph;
+          lineArtAnimActive = true;
+          setProgress(40, "Previewing simplified line art…");
+          startLineArtIntro(rgba, pw, ph, () => {
+            lineArtAnimActive = false;
+            if (pendingContourEdges && pendingContourW === pw && pendingContourH === ph) {
+              renderEdgePreview(pendingContourEdges, pw, ph);
+              pendingContourEdges = null;
+            }
+          });
         } else if (msg.type === "error") {
           w.removeEventListener("message", onMessage);
+          lineArtAnimToken += 1;
+          lineArtAnimActive = false;
+          pendingContourEdges = null;
           setProgress(0, msg.message || "Error");
           meta.textContent = "";
         } else if (msg.type === "done") {
           w.removeEventListener("message", onMessage);
           imgW = msg.w;
           imgH = msg.h;
-          edgeCanvas.width = msg.w;
-          edgeCanvas.height = msg.h;
           drawCanvas.width = msg.w;
           drawCanvas.height = msg.h;
+          if (edgeCanvas.width !== msg.w || edgeCanvas.height !== msg.h) {
+            edgeCanvas.width = msg.w;
+            edgeCanvas.height = msg.h;
+          }
 
           const edges = new Uint8Array(msg.edgePreview);
-          renderEdgePreview(edges, msg.w, msg.h);
+          pendingContourEdges = edges;
+          pendingContourW = msg.w;
+          pendingContourH = msg.h;
+          if (!lineArtAnimActive) {
+            renderEdgePreview(edges, msg.w, msg.h);
+            pendingContourEdges = null;
+          }
 
           paths = (msg.paths || []).map((p) => ({
             freqs: new Int16Array(p.freqs),
@@ -787,10 +1338,11 @@
     });
 
     reprocessBtn.addEventListener("click", () => {
-      if (lastFile) processFile(lastFile);
+      if (lastFile) {
+        showToast("Re-running pipeline…");
+        processFile(lastFile);
+      }
     });
-
-    refreshExportBtn.addEventListener("click", refreshExportText);
 
     copyDesmosBtn.addEventListener("click", async () => {
       refreshExportText();
@@ -798,10 +1350,17 @@
       try {
         await navigator.clipboard.writeText(t);
         statusEl.textContent = "Copied Desmos text to clipboard.";
+        showToast("Copied — paste into Desmos or any graphing tool.");
       } catch (_) {
         exportOut.select();
         statusEl.textContent = "Clipboard blocked — text selected; copy manually.";
+        showToast("Select the export text and copy manually (browser blocked clipboard).", 3200);
       }
+    });
+
+    refreshExportBtn.addEventListener("click", () => {
+      refreshExportText();
+      showToast("Export text refreshed.");
     });
 
     // Start animation loop once (idle until coeffs exist)

@@ -10,8 +10,58 @@ function grayscaleFromImageData(imageData) {
   return g;
 }
 
-function sobelEdges(gray, w, h, threshold) {
-  const out = new Uint8Array(w * h);
+function boxBlurH(src, dst, w, h, r) {
+  const size = 2 * r + 1;
+  const inv = 1 / size;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let sum = 0;
+      for (let dx = -r; dx <= r; dx++) {
+        const xx = Math.min(w - 1, Math.max(0, x + dx));
+        sum += src[y * w + xx];
+      }
+      dst[y * w + x] = sum * inv;
+    }
+  }
+}
+
+function boxBlurV(src, dst, w, h, r) {
+  const size = 2 * r + 1;
+  const inv = 1 / size;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let sum = 0;
+      for (let dy = -r; dy <= r; dy++) {
+        const yy = Math.min(h - 1, Math.max(0, y + dy));
+        sum += src[yy * w + x];
+      }
+      dst[y * w + x] = sum * inv;
+    }
+  }
+}
+
+/**
+ * Strong smoothing + light blend with original: keeps global shape, drops fine texture.
+ */
+function simplifyGrayscale(gray, w, h) {
+  const tmp = new Float32Array(w * h);
+  const a = new Float32Array(w * h);
+  a.set(gray);
+  const passes = 3;
+  const r = 2;
+  for (let p = 0; p < passes; p++) {
+    boxBlurH(a, tmp, w, h, r);
+    boxBlurV(tmp, a, w, h, r);
+  }
+  const out = new Float32Array(w * h);
+  for (let i = 0; i < out.length; i++) {
+    out[i] = 0.62 * a[i] + 0.38 * gray[i];
+  }
+  return out;
+}
+
+function sobelMagnitudeFloat(gray, w, h) {
+  const mag = new Float32Array(w * h);
   const kx = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
   const ky = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
   for (let y = 1; y < h - 1; y++) {
@@ -27,11 +77,51 @@ function sobelEdges(gray, w, h, threshold) {
           idx++;
         }
       }
-      const mag = Math.hypot(gx, gy);
-      out[y * w + x] = mag > threshold ? 255 : 0;
+      mag[y * w + x] = Math.hypot(gx, gy);
     }
   }
+  return mag;
+}
+
+/** Sampled percentile for adaptive edge cutoff (thresholdSlider 20–255 → stricter when higher). */
+function percentileFromMag(mag, p) {
+  const sample = [];
+  const step = Math.max(1, Math.floor(mag.length / 8000));
+  for (let i = 0; i < mag.length; i += step) sample.push(mag[i]);
+  sample.sort((a, b) => a - b);
+  const idx = Math.min(sample.length - 1, Math.max(0, Math.floor((sample.length - 1) * p)));
+  return sample[idx];
+}
+
+function binaryEdgesFromMagnitude(mag, w, h, edgeThreshold) {
+  const out = new Uint8Array(w * h);
+  const tNorm = (edgeThreshold - 20) / (255 - 20);
+  const p = 0.88 + tNorm * 0.11;
+  const cutoff = percentileFromMag(mag, p);
+  for (let i = 0; i < mag.length; i++) {
+    out[i] = mag[i] >= cutoff ? 255 : 0;
+  }
   return out;
+}
+
+/** RGBA cyan “neon line” preview from magnitude (for UI animation). */
+function lineArtRgbaFromMagnitude(mag, w, h) {
+  let maxM = 1e-6;
+  for (let i = 0; i < mag.length; i++) {
+    if (mag[i] > maxM) maxM = mag[i];
+  }
+  const inv = 1 / maxM;
+  const rgba = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0; i < mag.length; i++) {
+    const t = Math.min(1, mag[i] * inv);
+    const a = Math.floor(255 * Math.pow(t, 0.55));
+    const o = i * 4;
+    rgba[o] = 20;
+    rgba[o + 1] = 230;
+    rgba[o + 2] = 255;
+    rgba[o + 3] = a;
+  }
+  return rgba;
 }
 
 const PATH_COUNT = 10;
@@ -271,11 +361,30 @@ self.onmessage = (e) => {
     const imageData = ctx.getImageData(0, 0, w, h);
     const gray = grayscaleFromImageData(imageData);
 
-    self.postMessage({ type: "progress", percent: 28, stage: "Sobel edge detection…" });
+    self.postMessage({ type: "progress", percent: 22, stage: "Simplifying (shape-preserving blur)…" });
 
-    const edges = sobelEdges(gray, w, h, edgeThreshold);
+    const simplified = simplifyGrayscale(gray, w, h);
 
-    self.postMessage({ type: "progress", percent: 42, stage: "Segmenting edge contours…" });
+    self.postMessage({ type: "progress", percent: 30, stage: "Sobel on simplified image…" });
+
+    const mag = sobelMagnitudeFloat(simplified, w, h);
+
+    const lineArtRgba = lineArtRgbaFromMagnitude(mag, w, h);
+    self.postMessage(
+      {
+        type: "previewLineArt",
+        w,
+        h,
+        lineArt: lineArtRgba,
+      },
+      [lineArtRgba.buffer]
+    );
+
+    self.postMessage({ type: "progress", percent: 38, stage: "Thresholding edges for contours…" });
+
+    const edges = binaryEdgesFromMagnitude(mag, w, h, edgeThreshold);
+
+    self.postMessage({ type: "progress", percent: 44, stage: "Segmenting edge contours…" });
 
     const components = connectedEdgeComponents(edges, w, h);
     components.sort((a, b) => b.pixels.length - a.pixels.length);

@@ -7,6 +7,10 @@ export type PortraitPipelineResponse = {
   path: Point2[];
   edgeMaskPngBase64: string;
   lineArtPngBase64: string;
+  /** `lineArt` when DFT path was traced from the neon image; `photoCanny` if we fell back. */
+  pathSource?: string;
+  /** True when most samples along the path land on bright neon pixels. */
+  lineArtPathVerify?: boolean;
   error?: string;
 };
 
@@ -15,8 +19,8 @@ function pngBase64ToDataUrl(b64: string): string {
 }
 
 /**
- * Full OpenCV portrait bundle: Canny edge mask, resampled path (FFT input), neon line-art PNG.
- * Same route on Vercel (`api/portrait_pipeline.py`) and locally (`app/api/portrait_pipeline`).
+ * Full OpenCV portrait bundle: resampled path (FFT input, prefer trace from neon line art),
+ * edge mask PNG, neon PNG, plus `pathSource` / `lineArtPathVerify` from the server.
  */
 export async function fetchPortraitPipeline(
   file: File,
@@ -28,6 +32,8 @@ export async function fetchPortraitPipeline(
   height: number;
   edgeMaskDataUrl: string;
   lineArtDataUrl: string;
+  pathSource: string;
+  lineArtPathVerify: boolean;
 } | null> {
   const url = process.env.NEXT_PUBLIC_PORTRAIT_PIPELINE_API ?? "/api/portrait_pipeline";
   const form = new FormData();
@@ -47,6 +53,8 @@ export async function fetchPortraitPipeline(
       height: j.height,
       edgeMaskDataUrl: pngBase64ToDataUrl(j.edgeMaskPngBase64),
       lineArtDataUrl: pngBase64ToDataUrl(j.lineArtPngBase64),
+      pathSource: j.pathSource ?? "unknown",
+      lineArtPathVerify: Boolean(j.lineArtPathVerify),
     };
   } catch {
     return null;

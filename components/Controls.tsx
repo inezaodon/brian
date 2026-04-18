@@ -123,14 +123,21 @@ export function Controls() {
                 setMsg("Portrait pipeline failed (install Python deps: pip install -r requirements.txt, then restart dev).");
                 return;
               }
-              const { path, fftOrigin, width, height, edgeMaskDataUrl, lineArtDataUrl } = bundle;
+              const { path, fftOrigin, width, height, edgeMaskDataUrl, lineArtDataUrl, lineArtPathVerify, pathSource } =
+                bundle;
               setSourcePath(path, {
                 fftOrigin,
                 imageSize: { w: width, h: height },
                 lineArtDataUrl,
                 edgeMaskDataUrl,
               });
-              setMsg("OpenCV portrait bundle: Canny mask, DFT path, and neon line art.");
+              setMsg(
+                lineArtPathVerify
+                  ? "Fourier sketch: path traced from neon line art — verified on pixels, then DFT + epicycle."
+                  : pathSource === "photoCanny"
+                    ? "Fourier sketch: line-art trace did not verify; using photo Canny fallback path. Try edge threshold or a clearer portrait."
+                    : "Portrait bundle loaded; check line-art alignment.",
+              );
             } catch {
               if (objectUrl) URL.revokeObjectURL(objectUrl);
               setOriginalImageSrc(null);

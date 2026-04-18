@@ -9,7 +9,10 @@ import { useMemo, useState } from "react";
 export type DeckKey = "sketch" | "contour" | "line" | "image";
 
 const META: Record<DeckKey, { title: string; subtle: string }> = {
-  sketch: { title: "Sketch", subtle: "Epicycle trace (Fourier sum)" },
+  sketch: {
+    title: "Sketch",
+    subtle: "Epicycle (Fourier sum) — follows the DFT path traced from neon when the server verifies it",
+  },
   contour: { title: "Contour", subtle: "OpenCV edge mask + DFT loop (same tracing as FFT)" },
   line: { title: "Line art", subtle: "OpenCV neon (same portrait bundle as contour)" },
   image: { title: "Image", subtle: "Scaled input + DFT path in image coordinates" },
@@ -169,8 +172,8 @@ export function VisualDeck() {
                 </svg>
               )}
               <p className="mt-2 px-4 text-center text-[11px] text-slate-600">
-                White pixels: OpenCV Canny edges (after the same Gaussian blur as neon). Cyan: largest outer contour,
-                arc-length resampled — this polyline is exactly what the DFT consumes.
+                When line-art tracing verifies, this mask is the binarized neon layer used to extract that loop;
+                otherwise it is the photo Canny mask for the fallback path. Cyan overlay is the DFT polyline.
               </p>
             </div>
           )}

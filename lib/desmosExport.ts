@@ -64,6 +64,8 @@ export function buildDesmosExportText(
   lines.push(`Y_1(t)=${partsY.join("+")}`);
   lines.push("");
   lines.push("// Paste into Desmos: use (cx + X_1(t), cy - Y_1(t)) for y-up.");
+  lines.push("# Paste into Desmos: use (cx + X_1(t), cy - Y_1(t)) for y-up.");
+  lines.push("(cx + X_1(t), cy - Y_1(t)) {0 <= t <= 2 * pi}");
   return lines.join("\n");
 }
 
@@ -93,6 +95,9 @@ export function buildPlainTextExportText(model: FourierModel, termLimit: number)
   }
   lines.push(`X_1(t)=${partsX.join("+")}`);
   lines.push(`Y_1(t)=${partsY.join("+")}`);
+  lines.push("");
+  lines.push("# Paste into Desmos: use (cx + X_1(t), cy - Y_1(t)) for y-up.");
+  lines.push("(cx + X_1(t), cy - Y_1(t)) {0 <= t <= 2 * pi}");
   return lines.join("\n");
 }
 

@@ -60,10 +60,12 @@ export function ExportSection() {
         className="text-center"
       >
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-800/80">Export</p>
-        <h2 className="mt-2 font-heading text-3xl font-bold text-slate-900 sm:text-4xl">Copy coordinates</h2>
+        <h2 className="mt-2 font-heading text-3xl font-bold text-slate-900 sm:text-4xl">Copy Fourier equations</h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-600">
-          Same parametric trace as the legacy studio: commented block for notes + y-flip reminder, then ASCII-only
-          lines for pasting straight into Desmos as <span className="font-mono text-slate-800">(cx + X_1(t), cy - Y_1(t))</span>.
+          These are the sparse DFT terms as Desmos paste: amplitudes, frequencies, and phases inside{" "}
+          <span className="font-mono text-slate-800">X_1(t)</span> and <span className="font-mono text-slate-800">Y_1(t)</span>{" "}
+          (not raw <span className="font-mono text-slate-800">(x,y)</span> samples). The portrait pipeline only sends the
+          sampled path over the wire; the browser runs the FFT and builds this export.
         </p>
       </motion.div>
 

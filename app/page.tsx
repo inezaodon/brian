@@ -32,9 +32,9 @@ export default function Home() {
         <Story />
         <Steps />
         <MathCore />
+        <CompareSection />
         <Playground />
         <ExportSection />
-        <CompareSection />
         <EpicycleWowDynamic />
         <HumorAsides />
         <Footer />

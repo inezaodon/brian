@@ -87,19 +87,58 @@ export function CompareSection() {
   }, [sourcePath]);
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-24">
+    <section
+      id="pipeline-four-up"
+      className="mx-auto max-w-6xl scroll-mt-24 px-4 py-24"
+      aria-labelledby="pipeline-four-heading"
+    >
+      <motion.p
+        initial={{ opacity: 0, y: 8 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="text-center font-mono text-xs uppercase tracking-[0.28em] text-cyan-800/80"
+      >
+        Pipeline overview
+      </motion.p>
       <motion.h2
+        id="pipeline-four-heading"
         initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="font-heading text-center text-3xl font-bold text-slate-900 sm:text-4xl"
+        className="mt-2 font-heading text-center text-3xl font-bold text-slate-900 sm:text-4xl"
       >
         Photo · neon · traced loop · Fourier sketch
       </motion.h2>
       <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-slate-600">
-        Four snapshots of the same run: your raster, the OpenCV neon PNG from the bundle, the closed polyline the
-        browser FFT samples (chained Canny path), and one full turn of the sparse epicycle sum at your current term cap.
+        The row below is one end-to-end run: each square matches a stage from pixels to the curve the epicycles redraw.
       </p>
+      <motion.ol
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="mx-auto mt-8 max-w-3xl list-decimal space-y-3 pl-5 text-left text-sm leading-relaxed text-slate-600 sm:pl-6"
+      >
+        <li>
+          <span className="font-medium text-slate-800">Photo</span> — the raster you upload (or the bundled default).
+          Everything downstream uses this resolution and aspect after the server resizes the long edge.
+        </li>
+        <li>
+          <span className="font-medium text-slate-800">Neon (OpenCV)</span> — blur, Canny edges, contour cleanup, then
+          glow / HSV styling in Python. It is a <em>preview</em> of line energy; the DFT path is built separately from
+          stitched Canny chains so eyes, nose, and outline can all contribute.
+        </li>
+        <li>
+          <span className="font-medium text-slate-800">DFT polyline</span> — the exact closed polyline returned by the
+          portrait bundle: many contours from <span className="font-mono text-slate-800">RETR_LIST</span>, stitched by
+          nearest-neighbour endpoints, resampled to fixed arc-length samples. Those <span className="font-mono text-slate-800">(x, y)</span>{" "}
+          points become complex numbers <span className="font-mono text-slate-800">z_j</span> for the FFT.
+        </li>
+        <li>
+          <span className="font-medium text-slate-800">Epicycle trace</span> — one full parameter turn of the sparse sum
+          of rotating vectors whose amplitudes and phases come from the browser DFT. It should match the polyline when
+          enough terms are kept; fewer terms smooth the sketch.
+        </li>
+      </motion.ol>
 
       <div className="mt-10 grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">

@@ -15,7 +15,7 @@ export async function reloadDefaultPortrait(): Promise<void> {
   const edgeThreshold = useBrianStore.getState().edgeThreshold;
   const bundle = await fetchPortraitPipeline(file, {
     edgeThreshold,
-    maxSide: 280,
+    maxSide: 420,
     samplePoints: 384,
   });
   if (!bundle) throw new Error("Portrait pipeline unavailable (Python/OpenCV).");

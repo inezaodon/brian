@@ -81,13 +81,13 @@ class handler(BaseHTTPRequestHandler):
                 except ValueError:
                     et = 105
             et = max(20, min(255, et))
-            ms = 280
+            ms = 420
             sp = 384
             if "maxSide" in parts:
                 try:
                     ms = max(64, min(512, int(parts["maxSide"].decode("utf-8", errors="ignore").strip())))
                 except ValueError:
-                    ms = 280
+                    ms = 420
             if "samplePoints" in parts:
                 try:
                     sp = max(32, min(640, int(parts["samplePoints"].decode("utf-8", errors="ignore").strip())))

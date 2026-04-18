@@ -39,7 +39,7 @@ export async function fetchPortraitPipeline(
   const form = new FormData();
   form.append("image", file);
   form.append("edgeThreshold", String(opts?.edgeThreshold ?? 105));
-  form.append("maxSide", String(opts?.maxSide ?? 280));
+  form.append("maxSide", String(opts?.maxSide ?? 420));
   form.append("samplePoints", String(opts?.samplePoints ?? 384));
   try {
     const res = await fetch(url, { method: "POST", body: form });

@@ -114,7 +114,7 @@ export function Controls() {
               setOriginalImageSrc(objectUrl);
               const bundle = await fetchPortraitPipeline(f, {
                 edgeThreshold,
-                maxSide: 280,
+                maxSide: 420,
                 samplePoints: 384,
               });
               if (!bundle) {

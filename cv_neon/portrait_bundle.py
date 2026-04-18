@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import base64
+import logging
 from typing import Any
 
 import cv2
 import numpy as np
 
 from cv_neon.pipeline import run_pipeline
+
+_log = logging.getLogger(__name__)
 
 
 def resize_to_max_side(bgr: np.ndarray, max_side: int) -> np.ndarray:
@@ -74,26 +77,37 @@ def _path_dict_from_pts(samp: np.ndarray) -> list[dict[str, float]]:
 
 
 def _binary_mask_from_neon(line_bgr: np.ndarray, dilate_iters: int = 0) -> np.ndarray:
-    """
-    Combine luminance, channel max, LAB L, and cyan HSV hints so we latch onto drawn strokes + glow.
-    """
     gray = cv2.cvtColor(line_bgr, cv2.COLOR_BGR2GRAY)
     mx = np.max(line_bgr, axis=2)
     lab = cv2.cvtColor(line_bgr, cv2.COLOR_BGR2LAB)
     L = lab[:, :, 0]
     hsv = cv2.cvtColor(line_bgr, cv2.COLOR_BGR2HSV)
-    cyan = cv2.inRange(hsv, (78, 35, 35), (112, 255, 255))
 
-    m1 = (gray > 16).astype(np.uint8) * 255
-    m2 = (mx > 24).astype(np.uint8) * 255
-    m3 = (L > 20).astype(np.uint8) * 255
+    cyan = cv2.inRange(hsv, (72, 25, 25), (118, 255, 255))
+
+    gray_blur = cv2.GaussianBlur(gray, (0, 0), sigmaX=3)
+    mx_blur = cv2.GaussianBlur(mx.astype(np.float32), (0, 0), sigmaX=3)
+
+    m1 = (gray > 12).astype(np.uint8) * 255
+    m2 = (mx > 18).astype(np.uint8) * 255
+    m3 = (L > 15).astype(np.uint8) * 255
+    m4 = (gray_blur > 8).astype(np.uint8) * 255
+    m5 = (mx_blur > 12).astype(np.uint8) * 255
+
     m = cv2.bitwise_or(m1, m2)
     m = cv2.bitwise_or(m, m3)
+    m = cv2.bitwise_or(m, m4)
+    m = cv2.bitwise_or(m, m5)
     m = cv2.bitwise_or(m, cyan)
 
-    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-    m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, k, iterations=2 + dilate_iters)
-    m = cv2.morphologyEx(m, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)), iterations=1)
+    k_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+    m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, k_close, iterations=3 + dilate_iters)
+    m = cv2.morphologyEx(
+        m,
+        cv2.MORPH_OPEN,
+        cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)),
+        iterations=1,
+    )
     return m
 
 
@@ -102,12 +116,32 @@ def _path_from_binary_mask(
     sample_points: int,
     min_area: float,
 ) -> list[dict[str, float]] | None:
-    contours, _ = cv2.findContours(mask_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    h, w = mask_u8.shape
+    contours, _ = cv2.findContours(mask_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
         return None
-    best = max(contours, key=cv2.contourArea)
+
+    filled = np.zeros((h, w), dtype=np.uint8)
+    for cnt in contours:
+        if cv2.contourArea(cnt) >= min_area * 0.15:
+            cv2.drawContours(filled, [cnt], -1, 255, thickness=cv2.FILLED)
+
+    if filled.sum() == 0:
+        return None
+
+    close_k = max(7, int(min(w, h) * 0.06))
+    close_k = close_k | 1
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (close_k, close_k))
+    closed = cv2.morphologyEx(filled, cv2.MORPH_CLOSE, kernel, iterations=3)
+    closed = cv2.morphologyEx(closed, cv2.MORPH_DILATE, kernel, iterations=1)
+
+    outer, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    if not outer:
+        return None
+    best = max(outer, key=cv2.contourArea)
     if cv2.contourArea(best) < min_area:
         return None
+
     pts = best.reshape(-1, 2).astype(np.float64)
     try:
         samp = resample_closed_polyline(pts, sample_points)
@@ -116,22 +150,31 @@ def _path_from_binary_mask(
     return _path_dict_from_pts(samp)
 
 
-def _verify_path_on_line_art(line_bgr: np.ndarray, path: list[dict[str, float]], stride: int = 4) -> bool:
-    """Sample points along the path; require most samples to land on bright line-art pixels."""
+def _verify_path_on_line_art(
+    line_bgr: np.ndarray,
+    path: list[dict[str, float]],
+    stride: int = 4,
+    radius: int = 5,
+    threshold: float = 0.55,
+) -> bool:
     if len(path) < 16:
         return False
     gray = cv2.cvtColor(line_bgr, cv2.COLOR_BGR2GRAY)
-    h, w = gray.shape
+    blurred = cv2.GaussianBlur(gray, (0, 0), sigmaX=radius * 0.6)
+    h, w = blurred.shape
     ok = 0
     total = 0
     for i in range(0, len(path), stride):
         p = path[i]
         x = int(np.clip(round(p["x"]), 0, w - 1))
         y = int(np.clip(round(p["y"]), 0, h - 1))
+        x0, x1 = max(0, x - radius), min(w, x + radius + 1)
+        y0, y1 = max(0, y - radius), min(h, y + radius + 1)
+        patch = blurred[y0:y1, x0:x1]
         total += 1
-        if int(gray[y, x]) > 18 or int(np.max(line_bgr[y, x])) > 24:
+        if patch.size > 0 and int(patch.max()) > 18:
             ok += 1
-    return total > 0 and (ok / total) >= 0.68
+    return total > 0 and (ok / total) >= threshold
 
 
 def _photo_canny_path_and_edges(
@@ -144,19 +187,38 @@ def _photo_canny_path_and_edges(
     h: int,
 ) -> tuple[list[dict[str, float]], np.ndarray]:
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    k = 7 | 1
-    blurred = cv2.GaussianBlur(gray, (k, k), 0)
+    blurred = cv2.GaussianBlur(gray, (7, 7), 0)
     edges = cv2.Canny(blurred, canny_low, canny_high)
-    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
         return fallback_circle_path(w, h, sample_points), edges
-    best = max(contours, key=cv2.contourArea)
-    if cv2.contourArea(best) < min_area:
+
+    filled = np.zeros((h, w), dtype=np.uint8)
+    for cnt in contours:
+        if cv2.contourArea(cnt) >= min_area * 0.1:
+            cv2.drawContours(filled, [cnt], -1, 255, thickness=cv2.FILLED)
+
+    if filled.sum() == 0:
         return fallback_circle_path(w, h, sample_points), edges
+
+    close_k = max(7, int(min(w, h) * 0.06)) | 1
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (close_k, close_k))
+    closed = cv2.morphologyEx(filled, cv2.MORPH_CLOSE, kernel, iterations=3)
+    closed = cv2.morphologyEx(closed, cv2.MORPH_DILATE, kernel, iterations=1)
+
+    outer, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    if not outer:
+        return fallback_circle_path(w, h, sample_points), edges
+
+    best = max(outer, key=cv2.contourArea)
+    if cv2.contourArea(best) < min_area:
+        return fallback_circle_path(w, h, sample_points), closed
+
     pts = best.reshape(-1, 2).astype(np.float64)
     try:
         samp = resample_closed_polyline(pts, sample_points)
-        return _path_dict_from_pts(samp), edges
+        return _path_dict_from_pts(samp), closed
     except ValueError:
         return fallback_circle_path(w, h, sample_points), edges
 
@@ -164,7 +226,7 @@ def _photo_canny_path_and_edges(
 def build_portrait_bundle(
     bgr: np.ndarray,
     *,
-    max_side: int = 280,
+    max_side: int = 420,
     sample_points: int = 384,
     edge_threshold: int = 105,
     min_area: float | None = None,
@@ -210,22 +272,44 @@ def build_portrait_bundle(
     line_art_verify = False
 
     mask0 = _binary_mask_from_neon(line_bgr, dilate_iters=0)
-    cand = _path_from_binary_mask(mask0, sample_points, min_area)
+    cand0 = _path_from_binary_mask(mask0, sample_points, min_area)
+    ok0 = cand0 is not None and _verify_path_on_line_art(line_bgr, cand0)
 
-    if cand is not None and _verify_path_on_line_art(line_bgr, cand):
-        path_list = cand
+    if cand0 is None:
+        _log.warning("portrait_bundle: line-art mask produced no valid contour (mask0)")
+    elif not ok0:
+        _log.warning(
+            "portrait_bundle: line-art path failed proximity verification (len=%d, trying dilated mask)",
+            len(cand0),
+        )
+
+    if ok0:
+        path_list = cand0
         edge_for_png = mask0
         path_source = "lineArt"
         line_art_verify = True
     else:
         mask1 = _binary_mask_from_neon(line_bgr, dilate_iters=1)
-        cand = _path_from_binary_mask(mask1, sample_points, min_area * 0.85)
-        if cand is not None and _verify_path_on_line_art(line_bgr, cand):
-            path_list = cand
+        cand1 = _path_from_binary_mask(mask1, sample_points, min_area * 0.85)
+        ok1 = cand1 is not None and _verify_path_on_line_art(line_bgr, cand1)
+        if cand1 is None:
+            _log.warning("portrait_bundle: dilated line-art mask produced no valid contour (mask1)")
+        elif not ok1:
+            _log.warning(
+                "portrait_bundle: dilated line-art path failed proximity verification (len=%d)",
+                len(cand1),
+            )
+        if ok1:
+            path_list = cand1
             edge_for_png = mask1
             path_source = "lineArt"
             line_art_verify = True
         else:
+            _log.warning(
+                "portrait_bundle: fell back to photoCanny path (canny_low=%d, canny_high=%d)",
+                canny_low,
+                canny_high,
+            )
             path_list = fallback_path
             edge_for_png = photo_edges
             path_source = "photoCanny"

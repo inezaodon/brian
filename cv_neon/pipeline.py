@@ -1,4 +1,4 @@
-"""Portrait → neon line-art (OpenCV + NumPy). Used by CLI and Vercel Python runtime."""
+"""Portrait → neon line-art (OpenCV + NumPy). Used by CLI, Vercel, and `portrait_bundle` (typically ~420px max side)."""
 
 from __future__ import annotations
 

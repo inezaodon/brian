@@ -20,7 +20,7 @@ from cv_neon.portrait_bundle import build_portrait_bundle
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("-i", "--input", type=Path, required=True)
-    p.add_argument("--max-side", type=int, default=280)
+    p.add_argument("--max-side", type=int, default=420)
     p.add_argument("--sample-points", type=int, default=384)
     p.add_argument("--edge-threshold", type=int, default=105)
     args = p.parse_args()

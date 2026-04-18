@@ -14,7 +14,14 @@ import { Story } from "@/components/Story";
 
 const EpicycleWowDynamic = dynamic(
   () => import("@/components/EpicycleWow3D").then((m) => m.EpicycleWow3D),
-  { ssr: false, loading: () => <div className="h-[min(70vh,560px)] w-full animate-pulse rounded-2xl bg-slate-200/90" /> },
+  {
+    ssr: false,
+    loading: () => (
+      <div className="mx-auto max-w-6xl px-4 py-24">
+        <div className="mx-auto mt-8 h-[min(72vh,620px)] min-h-[300px] w-full animate-pulse rounded-2xl bg-slate-200/90" />
+      </div>
+    ),
+  },
 );
 
 export default function Home() {

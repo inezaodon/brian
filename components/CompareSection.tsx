@@ -28,17 +28,37 @@ export function CompareSection() {
   const originalImageSrc = useBrianStore((s) => s.originalImageSrc);
   const lineArtDataUrl = useBrianStore((s) => s.lineArtDataUrl);
 
+  /** Same centering + scale as the DFT polyline so the trace sits in the middle of the 100×100 viewBox. */
   const fourierSvg = useMemo(() => {
     if (!model) return "";
-    const pts: string[] = [];
     const n = 200;
+    const samples: { x: number; y: number }[] = [];
     for (let i = 0; i <= n; i++) {
       const t = (i / n) * Math.PI * 2;
       const p = epicyclePosition(model, t, maxTerms);
-      const x = 50 + p.x * 0.2;
-      const y = 50 + p.y * 0.2;
-      pts.push(`${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`);
+      samples.push({ x: p.x, y: p.y });
     }
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const p of samples) {
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
+    }
+    const bw = maxX - minX || 1;
+    const bh = maxY - minY || 1;
+    const s = 80 / Math.max(bw, bh);
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    const pts: string[] = [];
+    samples.forEach((p, i) => {
+      const x = 50 + (p.x - cx) * s;
+      const y = 50 + (p.y - cy) * s;
+      pts.push(`${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`);
+    });
     return pts.join(" ");
   }, [model, maxTerms]);
 

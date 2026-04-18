@@ -37,12 +37,12 @@ def simplify_contours(
 ) -> list[np.ndarray]:
     contours, _ = cv2.findContours(edge_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     out: list[np.ndarray] = []
+    # Canny edges are 1-px wide lines — enclosed area is near zero, so area is the wrong filter.
+    # Use arc length to reject only tiny noise; min_area still scales with image size from callers.
+    min_peri = max(15.0, min_area**0.5)
     for cnt in contours:
-        area = cv2.contourArea(cnt)
-        if area < min_area:
-            continue
         peri = cv2.arcLength(cnt, True)
-        if peri < 1e-6:
+        if peri < min_peri:
             continue
         eps = epsilon_ratio * peri
         approx = cv2.approxPolyDP(cnt, eps, True)

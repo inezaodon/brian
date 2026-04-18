@@ -2,7 +2,7 @@
 
 import { FourierVisualizer } from "@/components/FourierVisualizer";
 import { useResponsiveCanvasSize } from "@/hooks/useResponsiveCanvasSize";
-import { useBrianStore } from "@/lib/store";
+import { useSketchStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, GripVertical } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -97,11 +97,11 @@ export function VisualDeck() {
     minWidth: 220,
     minHeight: 150,
   });
-  const sourcePath = useBrianStore((s) => s.sourcePath);
-  const originalImageSrc = useBrianStore((s) => s.originalImageSrc);
-  const lineArtDataUrl = useBrianStore((s) => s.lineArtDataUrl);
-  const edgeMaskDataUrl = useBrianStore((s) => s.edgeMaskDataUrl);
-  const lastImageSize = useBrianStore((s) => s.lastImageSize);
+  const sourcePath = useSketchStore((s) => s.sourcePath);
+  const originalImageSrc = useSketchStore((s) => s.originalImageSrc);
+  const lineArtDataUrl = useSketchStore((s) => s.lineArtDataUrl);
+  const edgeMaskDataUrl = useSketchStore((s) => s.edgeMaskDataUrl);
+  const lastImageSize = useSketchStore((s) => s.lastImageSize);
 
   const pathPixelD = useMemo(() => pathToSvgPixelD(sourcePath, true), [sourcePath]);
   const procW = lastImageSize?.w ?? 0;

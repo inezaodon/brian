@@ -30,9 +30,9 @@ export default function Home() {
       <Hero />
       <PortraitGate>
         <Story />
+        <CompareSection />
         <Steps />
         <MathCore />
-        <CompareSection />
         <Playground />
         <ExportSection />
         <EpicycleWowDynamic />

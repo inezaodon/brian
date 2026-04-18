@@ -1,7 +1,7 @@
 "use client";
 
 import { epicyclePosition } from "@/lib/fourier";
-import { useBrianStore } from "@/lib/store";
+import { useSketchStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
 import type { ReactNode } from "react";
@@ -22,11 +22,11 @@ function CompareFrame({ tone, children }: { tone: "light" | "dark"; children: Re
 }
 
 export function CompareSection() {
-  const model = useBrianStore((s) => s.model);
-  const sourcePath = useBrianStore((s) => s.sourcePath);
-  const maxTerms = useBrianStore((s) => s.maxTerms);
-  const originalImageSrc = useBrianStore((s) => s.originalImageSrc);
-  const lineArtDataUrl = useBrianStore((s) => s.lineArtDataUrl);
+  const model = useSketchStore((s) => s.model);
+  const sourcePath = useSketchStore((s) => s.sourcePath);
+  const maxTerms = useSketchStore((s) => s.maxTerms);
+  const originalImageSrc = useSketchStore((s) => s.originalImageSrc);
+  const lineArtDataUrl = useSketchStore((s) => s.lineArtDataUrl);
 
   /** Same centering + scale as the DFT polyline so the trace sits in the middle of the 100×100 viewBox. */
   const fourierSvg = useMemo(() => {

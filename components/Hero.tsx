@@ -25,7 +25,7 @@ export function Hero() {
           transition={{ delay: 0.1 }}
           className="mb-3 font-mono text-xs uppercase tracking-[0.28em] text-cyan-800/80"
         >
-          Brian — Fourier curves from images
+          Fourier curves from images
         </motion.p>
         <motion.h1
           initial={{ opacity: 0, y: 16 }}

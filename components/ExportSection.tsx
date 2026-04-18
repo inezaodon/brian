@@ -2,14 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import { buildDesmosExportText, buildPlainTextExportText, copyToClipboard } from "@/lib/desmosExport";
-import { useBrianStore } from "@/lib/store";
+import { useSketchStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export function ExportSection() {
-  const model = useBrianStore((s) => s.model);
-  const maxTerms = useBrianStore((s) => s.maxTerms);
-  const lastImageSize = useBrianStore((s) => s.lastImageSize);
+  const model = useSketchStore((s) => s.model);
+  const maxTerms = useSketchStore((s) => s.maxTerms);
+  const lastImageSize = useSketchStore((s) => s.lastImageSize);
 
   const desmosRef = useRef<HTMLTextAreaElement>(null);
   const plainRef = useRef<HTMLTextAreaElement>(null);

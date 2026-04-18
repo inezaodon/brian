@@ -1,7 +1,7 @@
 "use client";
 
 import { epicyclePosition, type FourierModel } from "@/lib/fourier";
-import { useBrianStore } from "@/lib/store";
+import { useSketchStore } from "@/lib/store";
 import { useEffect, useRef } from "react";
 
 type Props = {
@@ -46,16 +46,16 @@ function unionBounds(models: FourierModel[], cap: number) {
 
 export function FourierVisualizer({ className, width, height, theme = "light" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const model = useBrianStore((s) => s.model);
-  const regionModels = useBrianStore((s) => s.regionModels);
-  const featureRegions = useBrianStore((s) => s.featureRegions);
-  const maxTerms = useBrianStore((s) => s.maxTerms);
-  const speed = useBrianStore((s) => s.speed);
-  const showCircles = useBrianStore((s) => s.showCircles);
-  const showPath = useBrianStore((s) => s.showPath);
-  const showVectors = useBrianStore((s) => s.showVectors);
-  const lineWidth = useBrianStore((s) => s.lineWidth);
-  const scrub = useBrianStore((s) => s.scrub);
+  const model = useSketchStore((s) => s.model);
+  const regionModels = useSketchStore((s) => s.regionModels);
+  const featureRegions = useSketchStore((s) => s.featureRegions);
+  const maxTerms = useSketchStore((s) => s.maxTerms);
+  const speed = useSketchStore((s) => s.speed);
+  const showCircles = useSketchStore((s) => s.showCircles);
+  const showPath = useSketchStore((s) => s.showPath);
+  const showVectors = useSketchStore((s) => s.showVectors);
+  const lineWidth = useSketchStore((s) => s.lineWidth);
+  const scrub = useSketchStore((s) => s.scrub);
   const tRef = useRef(0);
   const traceRefs = useRef<{ x: number; y: number }[][]>([]);
 

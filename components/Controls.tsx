@@ -2,29 +2,29 @@
 
 import { Button } from "@/components/ui/button";
 import { fetchPortraitPipeline } from "@/lib/fetchPortraitPipeline";
-import { useBrianStore } from "@/lib/store";
+import { useSketchStore } from "@/lib/store";
 import { useState } from "react";
 
 export function Controls() {
-  const maxTerms = useBrianStore((s) => s.maxTerms);
-  const setMaxTerms = useBrianStore((s) => s.setMaxTerms);
-  const featureRegions = useBrianStore((s) => s.featureRegions);
-  const setFeatureRegions = useBrianStore((s) => s.setFeatureRegions);
-  const speed = useBrianStore((s) => s.speed);
-  const setSpeed = useBrianStore((s) => s.setSpeed);
-  const edgeThreshold = useBrianStore((s) => s.edgeThreshold);
-  const setEdgeThreshold = useBrianStore((s) => s.setEdgeThreshold);
-  const showCircles = useBrianStore((s) => s.showCircles);
-  const setShowCircles = useBrianStore((s) => s.setShowCircles);
-  const showPath = useBrianStore((s) => s.showPath);
-  const setShowPath = useBrianStore((s) => s.setShowPath);
-  const showVectors = useBrianStore((s) => s.showVectors);
-  const setShowVectors = useBrianStore((s) => s.setShowVectors);
-  const lineWidth = useBrianStore((s) => s.lineWidth);
-  const setLineWidth = useBrianStore((s) => s.setLineWidth);
-  const setSourcePath = useBrianStore((s) => s.setSourcePath);
-  const setOriginalImageSrc = useBrianStore((s) => s.setOriginalImageSrc);
-  const resetDemo = useBrianStore((s) => s.resetDemo);
+  const maxTerms = useSketchStore((s) => s.maxTerms);
+  const setMaxTerms = useSketchStore((s) => s.setMaxTerms);
+  const featureRegions = useSketchStore((s) => s.featureRegions);
+  const setFeatureRegions = useSketchStore((s) => s.setFeatureRegions);
+  const speed = useSketchStore((s) => s.speed);
+  const setSpeed = useSketchStore((s) => s.setSpeed);
+  const edgeThreshold = useSketchStore((s) => s.edgeThreshold);
+  const setEdgeThreshold = useSketchStore((s) => s.setEdgeThreshold);
+  const showCircles = useSketchStore((s) => s.showCircles);
+  const setShowCircles = useSketchStore((s) => s.setShowCircles);
+  const showPath = useSketchStore((s) => s.showPath);
+  const setShowPath = useSketchStore((s) => s.setShowPath);
+  const showVectors = useSketchStore((s) => s.showVectors);
+  const setShowVectors = useSketchStore((s) => s.setShowVectors);
+  const lineWidth = useSketchStore((s) => s.lineWidth);
+  const setLineWidth = useSketchStore((s) => s.setLineWidth);
+  const setSourcePath = useSketchStore((s) => s.setSourcePath);
+  const setOriginalImageSrc = useSketchStore((s) => s.setOriginalImageSrc);
+  const resetDemo = useSketchStore((s) => s.resetDemo);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 

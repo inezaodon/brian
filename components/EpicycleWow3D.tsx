@@ -1,15 +1,15 @@
 "use client";
 
 import { epicyclePosition } from "@/lib/fourier";
-import { useBrianStore } from "@/lib/store";
+import { useSketchStore } from "@/lib/store";
 import { Line, OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { useMemo } from "react";
 import * as THREE from "three";
 
 function Ribbon() {
-  const model = useBrianStore((s) => s.model);
-  const maxTerms = useBrianStore((s) => s.maxTerms);
+  const model = useSketchStore((s) => s.model);
+  const maxTerms = useSketchStore((s) => s.maxTerms);
 
   const points = useMemo(() => {
     if (!model) return [] as THREE.Vector3[];

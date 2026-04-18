@@ -22,7 +22,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Brian — Fourier portrait paths & epicycle studio",
+  title: "Fourier portrait paths & epicycle studio",
   description:
     "Extract a closed edge loop from a portrait, approximate it with a sparse discrete Fourier transform in the browser, and visualize or export the epicycle sum.",
 };

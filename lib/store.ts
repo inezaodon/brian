@@ -7,7 +7,7 @@ import { buildRegionModels } from "./regionFourier";
 const DEFAULT_SAMPLES = 512;
 const DEFAULT_SPARSE = 400;
 
-type BrianState = {
+type SketchState = {
   sourcePath: Point2[];
   model: FourierModel | null;
   /** When >1, epicycle canvas uses one model per spatial region (cuts at largest gaps). */
@@ -68,7 +68,7 @@ const demo = buildDemoProfessorPath();
 
 const DEFAULT_FEATURE_REGIONS = 4;
 
-export const useBrianStore = create<BrianState>((set, get) => ({
+export const useSketchStore = create<SketchState>((set, get) => ({
   sourcePath: demo,
   model: computeModel(demo),
   featureRegions: DEFAULT_FEATURE_REGIONS,
@@ -118,7 +118,7 @@ export const useBrianStore = create<BrianState>((set, get) => ({
     const regionModels = computeRegionModels(path, k);
     const patch: Partial<
       Pick<
-        BrianState,
+        SketchState,
         | "sourcePath"
         | "model"
         | "regionModels"

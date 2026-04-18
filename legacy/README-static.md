@@ -17,7 +17,7 @@ Browser app that turns a **photo** into **sparse Fourier epicycle** motion: sepa
 Workers need **HTTP** (not `file://`):
 
 ```bash
-cd /path/to/brian
+cd /path/to/fourier-portrait-studio
 python3 -m http.server 8765
 ```
 
@@ -43,7 +43,7 @@ Open **http://localhost:8765/**
 
 ## Repo
 
-**GitHub:** [inezaodon/brian](https://github.com/inezaodon/brian)
+**GitHub:** [inezaodon/sketching_with_fouriers](https://github.com/inezaodon/sketching_with_fouriers)
 
 **Suggested repository “About” description** (paste in GitHub → repo → ⚙ Settings → General):
 

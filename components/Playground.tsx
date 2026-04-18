@@ -3,12 +3,12 @@
 import { Controls } from "@/components/Controls";
 import { FourierVisualizer } from "@/components/FourierVisualizer";
 import { useResponsiveCanvasSize } from "@/hooks/useResponsiveCanvasSize";
-import { useBrianStore } from "@/lib/store";
+import { useSketchStore } from "@/lib/store";
 import { motion } from "framer-motion";
 
 export function Playground() {
-  const originalImageSrc = useBrianStore((s) => s.originalImageSrc);
-  const lineArtDataUrl = useBrianStore((s) => s.lineArtDataUrl);
+  const originalImageSrc = useSketchStore((s) => s.originalImageSrc);
+  const lineArtDataUrl = useSketchStore((s) => s.lineArtDataUrl);
   const canvas = useResponsiveCanvasSize({ maxWidth: 560, aspect: 560 / 400, minWidth: 280, minHeight: 200 });
 
   return (

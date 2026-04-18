@@ -1,4 +1,4 @@
-# Brian — A Fourier Series Prank
+# Fourier portrait studio
 
 Interactive **Next.js** experience: a student reconstructs a professor-shaped curve with **live Fourier epicycles** (sparse DFT, magnitude-sorted harmonics, canvas animation).
 

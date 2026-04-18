@@ -1,5 +1,5 @@
 import { fetchPortraitPipeline } from "@/lib/fetchPortraitPipeline";
-import { useBrianStore } from "@/lib/store";
+import { useSketchStore } from "@/lib/store";
 
 export const DEFAULT_PORTRAIT_PUBLIC_PATH = "/default-portrait.png";
 
@@ -12,7 +12,7 @@ export async function reloadDefaultPortrait(): Promise<void> {
   if (!res.ok) throw new Error(`Missing ${DEFAULT_PORTRAIT_PUBLIC_PATH}`);
   const blob = await res.blob();
   const file = new File([blob], "default-portrait.png", { type: blob.type || "image/png" });
-  const edgeThreshold = useBrianStore.getState().edgeThreshold;
+  const edgeThreshold = useSketchStore.getState().edgeThreshold;
   const bundle = await fetchPortraitPipeline(file, {
     edgeThreshold,
     maxSide: 420,
@@ -20,11 +20,11 @@ export async function reloadDefaultPortrait(): Promise<void> {
   });
   if (!bundle) throw new Error("Portrait pipeline unavailable (Python/OpenCV).");
   const { path, fftOrigin, width, height, edgeMaskDataUrl, lineArtDataUrl } = bundle;
-  useBrianStore.getState().setSourcePath(path, {
+  useSketchStore.getState().setSourcePath(path, {
     fftOrigin,
     imageSize: { w: width, h: height },
     lineArtDataUrl,
     edgeMaskDataUrl,
   });
-  useBrianStore.getState().setOriginalImageSrc(DEFAULT_PORTRAIT_PUBLIC_PATH);
+  useSketchStore.getState().setOriginalImageSrc(DEFAULT_PORTRAIT_PUBLIC_PATH);
 }

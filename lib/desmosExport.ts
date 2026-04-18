@@ -69,17 +69,14 @@ export function buildDesmosExportText(
   return lines.join("\n");
 }
 
-/** ASCII-only lines Desmos can paste (legacy `buildPlainTextExport`). */
+/** Three lines for Desmos: X_1, Y_1, and parametric point with numeric origin (y-up). */
 export function buildPlainTextExportText(model: FourierModel, termLimit: number): string {
   const cap = effectiveCap(model, termLimit);
   if (cap <= 0) {
     return "No coefficients - process a path first.";
   }
-  const lines: string[] = [];
   const cx = round6(model.centroid.x);
   const cy = round6(model.centroid.y);
-  lines.push(`cx=${cx}`);
-  lines.push(`cy=${cy}`);
 
   const partsX: string[] = [];
   const partsY: string[] = [];
@@ -93,12 +90,10 @@ export function buildPlainTextExportText(model: FourierModel, termLimit: number)
     partsX.push(`${A}*cos(${freq}*t+${ph})`);
     partsY.push(`${A}*sin(${freq}*t+${ph})`);
   }
-  lines.push(`X_1(t)=${partsX.join("+")}`);
-  lines.push(`Y_1(t)=${partsY.join("+")}`);
-  lines.push("");
-  lines.push("# Paste into Desmos: use (cx + X_1(t), cy - Y_1(t)) for y-up.");
-  lines.push("(cx + X_1(t), cy - Y_1(t)) {0 <= t <= 2 * pi}");
-  return lines.join("\n");
+  const x1 = `X_1(t)=${partsX.join("+")}`;
+  const y1 = `Y_1(t)=${partsY.join("+")}`;
+  const pair = `(${cx} + X_1(t), ${cy} - Y_1(t))`;
+  return [x1, y1, pair].join("\n");
 }
 
 async function copyText(text: string): Promise<boolean> {

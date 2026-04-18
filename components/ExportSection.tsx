@@ -110,8 +110,11 @@ export function ExportSection() {
           <div className="border-b border-stone-200 pb-3">
             <h3 className="font-heading text-lg font-semibold text-slate-900">Plain text</h3>
             <p className="mt-1 text-xs leading-snug text-slate-600">
-              No comments or special characters. Paste into Desmos as expressions; use{" "}
-              <span className="font-mono text-slate-800">(cx+X_1(t), cy-Y_1(t))</span> for y-up.
+              Three lines only: <span className="font-mono text-slate-800">X_1(t)</span>,{" "}
+              <span className="font-mono text-slate-800">Y_1(t)</span>, then{" "}
+              <span className="font-mono text-slate-800">(origin_x + X_1(t), origin_y - Y_1(t))</span> with numeric
+              origin (Desmos y-up). Set <span className="font-mono text-slate-800">0 ≤ t ≤ 2π</span> on the parametric
+              row if needed.
             </p>
           </div>
           <textarea

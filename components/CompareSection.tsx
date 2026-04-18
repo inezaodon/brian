@@ -61,36 +61,36 @@ export function CompareSection() {
         Original vs pipeline vs sketch
       </motion.h2>
       <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-slate-600">
-        Raster in, OpenCV neon preview (when available), the resampled loop the DFT actually uses, then the Fourier
-        trace with your current term cap.
+        Raster in, neon preview when available, the resampled closed path sent to the FFT, then the Fourier trace with
+        your current term cap.
       </p>
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
+      <div className="mt-10 grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
           <div className="text-center font-mono text-[10px] uppercase tracking-wider text-slate-500">1 · Original</div>
           <div className="mt-2 flex aspect-square max-h-64 items-center justify-center bg-stone-50">
             {originalImageSrc ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={originalImageSrc} alt="" className="max-h-full max-w-full object-contain" />
+              <img src={originalImageSrc} alt="" className="max-h-full max-w-full min-w-0 object-contain" />
             ) : (
               <span className="text-xs text-slate-400">—</span>
             )}
           </div>
         </div>
-        <div className="rounded-2xl border border-stone-200 bg-slate-950 p-3 shadow-sm">
+        <div className="min-w-0 rounded-2xl border border-stone-200 bg-slate-950 p-3 shadow-sm">
           <div className="text-center font-mono text-[10px] uppercase tracking-wider text-slate-400">
             2 · Line art (OpenCV)
           </div>
           <div className="mt-2 flex aspect-square max-h-64 items-center justify-center">
             {lineArtDataUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={lineArtDataUrl} alt="" className="max-h-full max-w-full object-contain" />
+              <img src={lineArtDataUrl} alt="" className="max-h-full max-w-full min-w-0 object-contain" />
             ) : (
               <span className="text-xs text-slate-500">—</span>
             )}
           </div>
         </div>
-        <div className="rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
+        <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
           <div className="text-center font-mono text-[10px] uppercase tracking-wider text-slate-500">
             3 · Extracted loop
           </div>
@@ -99,7 +99,7 @@ export function CompareSection() {
             <path d={sourceSvg} fill="none" stroke="currentColor" strokeWidth="0.5" />
           </svg>
         </div>
-        <div className="rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
+        <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
           <div className="text-center font-mono text-[10px] uppercase tracking-wider text-slate-500">
             4 · Fourier trace
           </div>

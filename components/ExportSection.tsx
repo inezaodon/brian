@@ -69,12 +69,12 @@ export function ExportSection() {
         </p>
       </motion.div>
 
-      <div className="mt-12 grid gap-8 lg:grid-cols-[1fr_320px]">
+      <div className="mt-12 grid min-w-0 gap-8 lg:grid-cols-[1fr_320px]">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm"
+          className="min-w-0 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm"
         >
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-100 pb-3">
             <div>
@@ -95,8 +95,9 @@ export function ExportSection() {
             readOnly
             spellCheck={false}
             rows={14}
+            data-lenis-prevent
             defaultValue={commented}
-            className="mt-4 w-full resize-y rounded-xl border border-stone-200 bg-stone-50/80 p-4 font-mono text-xs leading-relaxed text-slate-800 focus:border-cyan-400 focus:outline-none"
+            className="mt-4 max-h-[min(28rem,52dvh)] w-full resize-y overflow-y-auto overscroll-y-contain rounded-xl border border-stone-200 bg-stone-50/80 p-4 font-mono text-xs leading-relaxed text-slate-800 focus:border-cyan-400 focus:outline-none"
             placeholder="Process an image or use the demo to generate copy-paste parametric equations…"
           />
         </motion.div>
@@ -105,17 +106,16 @@ export function ExportSection() {
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="flex flex-col rounded-2xl border border-stone-200 bg-stone-50/90 p-5 shadow-sm"
+          className="flex min-w-0 flex-col rounded-2xl border border-stone-200 bg-stone-50/90 p-5 shadow-sm"
         >
           <div className="border-b border-stone-200 pb-3">
             <h3 className="font-heading text-lg font-semibold text-slate-900">Plain text</h3>
             <p className="mt-1 text-xs leading-snug text-slate-600">
-              <span className="font-mono text-cyan-900">test_coords:</span> long sums split into{" "}
-              <span className="font-mono text-slate-800">X_1a, X_1b, …</span> (≤40 terms each), then{" "}
-              <span className="font-mono text-slate-800">X_1</span> / <span className="font-mono text-slate-800">Y_1</span>{" "}
+              Long sums split into <span className="font-mono text-slate-800">X_1a, X_1b, …</span> (≤40 cosine terms
+              each), then <span className="font-mono text-slate-800">X_1</span> / <span className="font-mono text-slate-800">Y_1</span>{" "}
               sums; or list <span className="font-mono text-slate-800">A,F,P</span> +{" "}
               <span className="font-mono text-slate-800">sum</span> if &gt;120 terms. Last line is the numeric-origin
-              parametric tuple. Set <span className="font-mono text-slate-800">0 ≤ t ≤ 2π</span> on that row in Desmos.
+              parametric tuple — set <span className="font-mono text-slate-800">0 ≤ t ≤ 2π</span> on that row in Desmos.
             </p>
           </div>
           <textarea
@@ -123,8 +123,9 @@ export function ExportSection() {
             readOnly
             spellCheck={false}
             rows={12}
+            data-lenis-prevent
             defaultValue={plain}
-            className="mt-4 min-h-[200px] w-full flex-1 resize-y rounded-xl border border-stone-200 bg-white p-4 font-mono text-xs leading-relaxed text-slate-800 focus:border-cyan-400 focus:outline-none"
+            className="mt-4 min-h-[200px] max-h-[min(28rem,52dvh)] w-full flex-1 resize-y overflow-y-auto overscroll-y-contain rounded-xl border border-stone-200 bg-white p-4 font-mono text-xs leading-relaxed text-slate-800 focus:border-cyan-400 focus:outline-none"
             placeholder="Plain-text equations appear here…"
           />
           <Button type="button" className="mt-4 w-full" size="sm" onClick={copyPlain}>

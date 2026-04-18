@@ -29,7 +29,10 @@ export function Controls() {
   const [msg, setMsg] = useState<string | null>(null);
 
   return (
-    <aside className="space-y-6 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+    <aside
+      data-lenis-prevent
+      className="space-y-6 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm lg:sticky lg:top-6 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto lg:overscroll-y-contain lg:pr-1"
+    >
       <div>
         <label className="text-xs font-medium uppercase tracking-wider text-slate-500">Terms (N)</label>
         <input

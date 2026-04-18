@@ -74,14 +74,11 @@ export function MathCore() {
       >
         <h3 className="font-heading text-lg font-semibold text-slate-900">From pixels to complex samples</h3>
         <p className="mt-3 text-sm leading-relaxed text-slate-600">
-          Luminance first, then three separable box-blur passes (radius 2) blended back as{" "}
-          <span className="font-mono text-slate-800">0.62·blur + 0.38·raw</span> — matching your{" "}
-          <span className="font-mono text-slate-800">Downloads/fourier-worker.js</span>. Sobel filters estimate gradients
-          on that simplified field; the separate neon line-art preview is OpenCV on the server. We threshold{" "}
-          <span className="font-mono text-slate-800">|∇I|</span> with a <em>percentile</em> cutoff (your edge slider maps
-          into that percentile exactly like the old worker). The largest 8-connected foreground blob is chained by
-          greedy nearest-neighbor order and resampled uniformly in arc length to get{" "}
-          <span className="font-mono text-slate-800">z_j</span> on a stable grid.
+          The legacy worker blended box-blur with raw luminance; this site’s <strong>portrait bundle</strong> runs on
+          the server: OpenCV blur → Canny → <span className="font-mono text-slate-800">findContours(RETR_LIST)</span> so
+          eyes, nose, mouth, and outline appear as separate chains, stitched in order by nearest-neighbour endpoints,
+          then arc-length resampled to a <strong>single closed loop</strong>{" "}
+          <span className="font-mono text-slate-800">z_j</span> for the FFT. A separate neon pass is only for display.
         </p>
         <div className="mt-6 overflow-x-auto rounded-xl border border-stone-100 bg-slate-50 p-4 text-center text-slate-900">
           <div ref={refSobel} className="katex-wrap" />

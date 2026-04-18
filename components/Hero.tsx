@@ -18,32 +18,43 @@ export function Hero() {
         aria-hidden
       />
 
-      <div className="relative z-10 flex max-w-3xl flex-col items-center text-center">
+      <div className="relative z-10 flex max-w-2xl flex-col items-center text-center sm:max-w-3xl">
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="mb-3 font-mono text-xs uppercase tracking-[0.28em] text-cyan-800/80"
         >
-          Brian — a Fourier series prank
+          Brian — Fourier curves from images
         </motion.p>
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.02, duration: 0.55 }}
-          className="font-heading text-4xl font-bold leading-[1.08] tracking-tight text-slate-900 sm:text-6xl md:text-6xl"
+          className="font-heading text-3xl font-bold leading-[1.12] tracking-tight text-slate-900 sm:text-5xl md:text-[2.75rem]"
         >
-          I turned my professor into math.
+          Epicycles that trace a portrait edge loop
         </motion.h1>
-        <motion.p
+        <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="mt-5 max-w-xl text-lg text-slate-600 sm:text-xl"
+          className="mt-6 max-w-2xl space-y-4 text-left text-base leading-relaxed text-slate-600 sm:text-center sm:text-lg"
         >
-          A Fourier series reconstruction of a real human — epicycles, DFT, zero permission slips. Nothing animates up
-          here; scroll when you’re ready to actually see the machine.
-        </motion.p>
+          <p>
+            <span className="font-medium text-slate-800">What this does.</span> Upload a portrait (or load the bundled
+            example). A Python/OpenCV service finds edge contours, stitches them into one closed polyline, and returns
+            evenly spaced samples. In your browser, those samples become complex numbers; a radix-2 FFT yields Fourier
+            coefficients. The live view sums rotating vectors—epicycles—so their tip redraws the same path you can
+            also export as equations.
+          </p>
+          <p>
+            <span className="font-medium text-slate-800">Why Fourier.</span> Any reasonable closed curve can be
+            expressed as a sum of harmonics: each term is a small circle turning at an integer multiple of the base
+            rate. Low frequencies capture coarse shape; high frequencies follow detail. This app keeps the strongest
+            bins (sparse spectrum), orders them by frequency, and animates the same sum the canvas and 3D ribbon use.
+          </p>
+        </motion.div>
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -54,7 +65,7 @@ export function Hero() {
             size="lg"
             onClick={() => document.getElementById("experiment")?.scrollIntoView({ behavior: "smooth" })}
           >
-            Start the experiment
+            Open interactive demo
           </Button>
         </motion.div>
       </div>

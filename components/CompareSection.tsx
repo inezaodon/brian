@@ -58,16 +58,16 @@ export function CompareSection() {
         viewport={{ once: true }}
         className="font-heading text-center text-3xl font-bold text-slate-900 sm:text-4xl"
       >
-        Original vs pipeline vs sketch
+        Photo · neon · traced loop · Fourier sketch
       </motion.h2>
       <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-slate-600">
-        Raster in, neon preview when available, the resampled closed path sent to the FFT, then the Fourier trace with
-        your current term cap.
+        Four snapshots of the same run: your raster, the OpenCV neon PNG from the bundle, the closed polyline the
+        browser FFT samples (chained Canny path), and one full turn of the sparse epicycle sum at your current term cap.
       </p>
 
       <div className="mt-10 grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
-          <div className="text-center font-mono text-[10px] uppercase tracking-wider text-slate-500">1 · Original</div>
+          <div className="text-center font-mono text-[10px] uppercase tracking-wider text-slate-500">1 · Photo</div>
           <div className="mt-2 flex aspect-square max-h-64 items-center justify-center bg-stone-50">
             {originalImageSrc ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -79,7 +79,7 @@ export function CompareSection() {
         </div>
         <div className="min-w-0 rounded-2xl border border-stone-200 bg-slate-950 p-3 shadow-sm">
           <div className="text-center font-mono text-[10px] uppercase tracking-wider text-slate-400">
-            2 · Line art (OpenCV)
+            2 · Neon (OpenCV)
           </div>
           <div className="mt-2 flex aspect-square max-h-64 items-center justify-center">
             {lineArtDataUrl ? (
@@ -92,7 +92,7 @@ export function CompareSection() {
         </div>
         <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
           <div className="text-center font-mono text-[10px] uppercase tracking-wider text-slate-500">
-            3 · Extracted loop
+            3 · DFT polyline
           </div>
           <svg viewBox="0 0 100 100" className="mt-2 aspect-square max-h-64 w-full text-emerald-700/90">
             <rect width="100" height="100" fill="#fafafa" rx="4" />
@@ -101,7 +101,7 @@ export function CompareSection() {
         </div>
         <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
           <div className="text-center font-mono text-[10px] uppercase tracking-wider text-slate-500">
-            4 · Fourier trace
+            4 · Epicycle trace
           </div>
           <svg viewBox="0 0 100 100" className="mt-2 aspect-square max-h-64 w-full text-cyan-700/90">
             <rect width="100" height="100" fill="#fafafa" rx="4" />

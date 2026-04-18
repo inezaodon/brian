@@ -46,12 +46,17 @@ export function EpicycleWow3D() {
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-cyan-800/80">Wow feature</p>
         <h2 className="mt-2 font-heading text-3xl font-bold text-slate-900 sm:text-4xl">3D ribbon of the same curve</h2>
         <p className="mx-auto mt-3 max-w-xl text-sm text-slate-600">
-          The identical Fourier trace, extruded with a sine wave in Z and orbiting slowly — math as sculpture.
+          The identical Fourier trace, extruded with a sine wave in Z and orbiting slowly — math as sculpture. Scroll
+          or pinch <span className="font-medium text-slate-800">over the canvas</span> to zoom; drag to orbit (wheel
+          does not move the page while the pointer is here).
         </p>
       </div>
-      <div className="mt-8 h-[min(70vh,560px)] w-full overflow-hidden rounded-2xl border border-stone-200 bg-slate-100 shadow-md shadow-slate-300/40 touch-pan-y">
+      <div
+        data-lenis-prevent
+        className="mt-8 h-[min(70vh,560px)] w-full cursor-grab overflow-hidden rounded-2xl border border-stone-200 bg-slate-100 shadow-md shadow-slate-300/40 touch-manipulation active:cursor-grabbing"
+      >
         <Canvas
-          className="touch-pan-y"
+          className="h-full w-full touch-manipulation"
           camera={{ position: [0, 0, 9], fov: 45 }}
           gl={{ antialias: true, alpha: false }}
         >
@@ -59,8 +64,16 @@ export function EpicycleWow3D() {
           <ambientLight intensity={0.55} />
           <pointLight position={[10, 10, 10]} intensity={0.65} color="#38bdf8" />
           <Ribbon />
-          {/* Wheel zoom captures scroll; keep orbit + pan only so the page can scroll past this section. */}
-          <OrbitControls enableDamping dampingFactor={0.06} enableZoom={false} />
+          <OrbitControls
+            enableDamping
+            dampingFactor={0.06}
+            enableZoom
+            zoomSpeed={0.85}
+            minDistance={4.5}
+            maxDistance={26}
+            enablePan
+            screenSpacePanning
+          />
         </Canvas>
       </div>
     </section>

@@ -66,23 +66,25 @@ function computeRegionModels(path: Point2[], regionCount: number): FourierModel[
 
 const demo = buildDemoProfessorPath();
 
+const DEFAULT_FEATURE_REGIONS = 4;
+
 export const useBrianStore = create<BrianState>((set, get) => ({
   sourcePath: demo,
   model: computeModel(demo),
-  featureRegions: 1,
-  regionModels: [],
+  featureRegions: DEFAULT_FEATURE_REGIONS,
+  regionModels: computeRegionModels(demo, DEFAULT_FEATURE_REGIONS),
   lastFftOrigin: null,
   originalImageSrc: null,
   lineArtDataUrl: null,
   edgeMaskDataUrl: null,
   lastImageSize: null,
   edgeThreshold: 105,
-  maxTerms: 120,
-  speed: 1,
-  showCircles: true,
+  maxTerms: 139,
+  speed: 3,
+  showCircles: false,
   showPath: true,
   showVectors: true,
-  lineWidth: 2,
+  lineWidth: 1,
   scrub: 1,
   setMaxTerms: (n) => {
     set({ maxTerms: n });

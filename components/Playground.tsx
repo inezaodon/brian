@@ -25,7 +25,7 @@ export function Playground() {
           Terms, speed, toggles, stroke — everything hot-swaps. New uploads run the OpenCV portrait bundle (chained
           Canny path, edge mask, neon) via <code className="text-slate-800">/api/portrait_pipeline</code>; the sketch
           follows that resampled loop (Terms slider, default{" "}
-          <span className="font-mono text-slate-800">120</span>). Legacy worker notes live in{" "}
+          <span className="font-mono text-slate-800">139</span>). Legacy worker notes live in{" "}
           <code className="text-slate-800">Downloads/fourier-worker.js</code>.{" "}
           <a href="#export" className="font-medium text-cyan-800 underline-offset-2 hover:underline">
             Desmos export &amp; plain text

@@ -47,16 +47,18 @@ export function EpicycleWow3D() {
         <h2 className="mt-2 font-heading text-3xl font-bold text-slate-900 sm:text-4xl">3D ribbon of the same curve</h2>
         <p className="mx-auto mt-3 max-w-xl text-sm text-slate-600">
           The identical Fourier trace, extruded with a sine wave in Z and orbiting slowly — math as sculpture. Scroll
-          or pinch <span className="font-medium text-slate-800">over the canvas</span> to zoom; drag to orbit (wheel
-          does not move the page while the pointer is here).
+          or pinch <span className="font-medium text-slate-800">over the canvas</span> to zoom; drag to orbit. If the
+          viewer is clipped on a short screen, <span className="font-medium text-slate-800">scroll this panel</span>{" "}
+          vertically to see it all (wheel stays inside the panel while the pointer is here).
         </p>
       </div>
       <div
         data-lenis-prevent
-        className="mt-8 h-[min(70vh,560px)] w-full cursor-grab overflow-hidden rounded-2xl border border-stone-200 bg-slate-100 shadow-md shadow-slate-300/40 touch-manipulation active:cursor-grabbing"
+        className="mt-8 max-h-[min(88dvh,720px)] w-full cursor-grab overflow-y-auto overflow-x-hidden overscroll-y-contain rounded-2xl border border-stone-200 bg-slate-100 shadow-md shadow-slate-300/40 touch-manipulation scroll-smooth active:cursor-grabbing"
       >
+        <div className="h-[min(70vh,560px)] min-h-[280px] w-full min-w-0">
         <Canvas
-          className="h-full w-full touch-manipulation"
+          className="block h-full w-full touch-manipulation"
           camera={{ position: [0, 0, 9], fov: 45 }}
           gl={{ antialias: true, alpha: false }}
         >
@@ -75,6 +77,7 @@ export function EpicycleWow3D() {
             screenSpacePanning
           />
         </Canvas>
+        </div>
       </div>
     </section>
   );

@@ -5,7 +5,11 @@ import { motion } from "framer-motion";
 
 const beats = [
   { k: "01", t: "Original idea", d: "Photo or silhouette → raster pipeline." },
-  { k: "02", t: "Extracted path", d: "OpenCV neon → binarize (multi-cue) → largest loop → verify on pixels → DFT samples." },
+  {
+    k: "02",
+    t: "Extracted path",
+    d: "OpenCV Canny (RETR_LIST) → stitch contours → one closed polyline → resampled DFT samples (neon PNG is preview).",
+  },
   { k: "03", t: "Fourier coefficients", d: "Complex z_j, zero-pad, FFT, sparse magnitude pick." },
   { k: "04", t: "Reconstruction", d: "Rotating phasors chained; tip redraws the loop." },
 ];

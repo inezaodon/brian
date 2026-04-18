@@ -19,7 +19,7 @@ const EpicycleWowDynamic = dynamic(
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)]">
+    <main className="relative min-h-screen overflow-x-clip bg-[var(--color-background)] text-[var(--color-foreground)]">
       <Hero />
       <PortraitGate>
         <Story />

@@ -41,7 +41,7 @@ export function PortraitGate({ children }: { children: React.ReactNode }) {
   return (
     <>
       {error && (
-        <p className="mx-auto max-w-lg px-4 py-2 text-center font-mono text-xs text-amber-800">
+        <p className="mx-auto max-w-prose px-4 py-3 text-center font-mono text-xs leading-relaxed text-amber-900">
           {error} — showing built-in demo curve until you upload.
         </p>
       )}

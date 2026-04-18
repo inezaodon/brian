@@ -2,12 +2,14 @@
 
 import { Controls } from "@/components/Controls";
 import { FourierVisualizer } from "@/components/FourierVisualizer";
+import { useResponsiveCanvasSize } from "@/hooks/useResponsiveCanvasSize";
 import { useBrianStore } from "@/lib/store";
 import { motion } from "framer-motion";
 
 export function Playground() {
   const originalImageSrc = useBrianStore((s) => s.originalImageSrc);
   const lineArtDataUrl = useBrianStore((s) => s.lineArtDataUrl);
+  const canvas = useResponsiveCanvasSize({ maxWidth: 560, aspect: 560 / 400, minWidth: 280, minHeight: 200 });
 
   return (
     <section id="experiment" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-24">
@@ -20,9 +22,10 @@ export function Playground() {
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-cyan-800/80">Playground</p>
         <h2 className="mt-2 font-heading text-3xl font-bold text-slate-900 sm:text-4xl">Twist the prank in real time</h2>
         <p className="mx-auto mt-3 max-w-lg text-sm text-slate-600">
-          Terms, speed, toggles, stroke — everything hot-swaps.           New uploads run the OpenCV portrait bundle (neon, traced path, mask) via{" "}
-          <code className="text-slate-800">/api/portrait_pipeline</code>; the epicycle sketch follows that path (Terms
-          slider, default <span className="font-mono text-slate-800">120</span>). Legacy worker notes live in{" "}
+          Terms, speed, toggles, stroke — everything hot-swaps. New uploads run the OpenCV portrait bundle (chained
+          Canny path, edge mask, neon) via <code className="text-slate-800">/api/portrait_pipeline</code>; the sketch
+          follows that resampled loop (Terms slider, default{" "}
+          <span className="font-mono text-slate-800">120</span>). Legacy worker notes live in{" "}
           <code className="text-slate-800">Downloads/fourier-worker.js</code>.{" "}
           <a href="#export" className="font-medium text-cyan-800 underline-offset-2 hover:underline">
             Desmos export &amp; plain text
@@ -35,9 +38,9 @@ export function Playground() {
         initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="mt-10 grid gap-4 sm:grid-cols-2"
+        className="mt-10 grid min-w-0 gap-4 sm:grid-cols-2"
       >
-        <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
           <p className="text-center font-mono text-[10px] uppercase tracking-wider text-slate-500">Original input</p>
           <div className="mt-2 flex max-h-56 min-h-[140px] items-center justify-center bg-stone-50">
             {originalImageSrc ? (
@@ -45,21 +48,21 @@ export function Playground() {
               <img
                 src={originalImageSrc}
                 alt="Image fed to the contour pipeline"
-                className="max-h-56 w-full object-contain"
+                className="max-h-56 w-full min-w-0 object-contain"
               />
             ) : (
               <p className="px-4 text-center text-xs text-slate-400">Loading default portrait…</p>
             )}
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-stone-200 bg-slate-950 p-3 shadow-sm">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-stone-200 bg-slate-950 p-3 shadow-sm">
           <p className="text-center font-mono text-[10px] uppercase tracking-wider text-slate-400">
             Neon line art (OpenCV)
           </p>
           <div className="mt-2 flex max-h-56 min-h-[140px] items-center justify-center">
             {lineArtDataUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={lineArtDataUrl} alt="Neon line art preview" className="max-h-56 w-full object-contain" />
+              <img src={lineArtDataUrl} alt="Neon line art preview" className="max-h-56 w-full min-w-0 object-contain" />
             ) : (
               <p className="px-4 text-center text-xs text-slate-500">Awaiting pipeline…</p>
             )}
@@ -67,16 +70,23 @@ export function Playground() {
         </div>
       </motion.div>
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="mt-10 grid min-w-0 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="flex min-h-[360px] items-center justify-center overflow-hidden rounded-2xl border border-stone-200 bg-white p-4 shadow-sm"
+          className="flex min-h-[min(360px,50dvh)] items-center justify-center overflow-hidden rounded-2xl border border-stone-200 bg-white p-3 shadow-sm sm:p-4"
         >
-          <div className="flex w-full flex-col items-center gap-2">
+          <div className="flex w-full min-w-0 flex-col items-center gap-2">
             <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Fourier sketch (live)</p>
-            <FourierVisualizer width={560} height={400} theme="light" className="max-w-full rounded-lg" />
+            <div ref={canvas.ref} className="w-full min-w-0 max-w-[560px]">
+              <FourierVisualizer
+                width={canvas.width}
+                height={canvas.height}
+                theme="light"
+                className="w-full max-w-full rounded-lg"
+              />
+            </div>
           </div>
         </motion.div>
         <Controls />

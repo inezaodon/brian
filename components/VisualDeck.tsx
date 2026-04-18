@@ -1,6 +1,7 @@
 "use client";
 
 import { FourierVisualizer } from "@/components/FourierVisualizer";
+import { useResponsiveCanvasSize } from "@/hooks/useResponsiveCanvasSize";
 import { useBrianStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, GripVertical } from "lucide-react";
@@ -11,11 +12,11 @@ export type DeckKey = "sketch" | "contour" | "line" | "image";
 const META: Record<DeckKey, { title: string; subtle: string }> = {
   sketch: {
     title: "Sketch",
-    subtle: "Epicycle (Fourier sum) — follows the DFT path traced from neon when the server verifies it",
+    subtle: "Live epicycle sum — same DFT path as the playground (chained Canny edges, image-center origin)",
   },
-  contour: { title: "Contour", subtle: "OpenCV edge mask + DFT loop (same tracing as FFT)" },
-  line: { title: "Line art", subtle: "OpenCV neon (same portrait bundle as contour)" },
-  image: { title: "Image", subtle: "Scaled input + DFT path in image coordinates" },
+  contour: { title: "Contour", subtle: "Canny edge preview + DFT polyline in processing coordinates" },
+  line: { title: "Line art", subtle: "Neon glow from the same OpenCV portrait bundle as the path" },
+  image: { title: "Image", subtle: "Input raster at processing aspect + overlaid DFT loop" },
 };
 
 /** Path in raster pixel coordinates (matches `lastImageSize` / edge mask). */
@@ -48,7 +49,7 @@ function DeckCard({
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-24px" }}
-      className={`flex flex-col overflow-hidden rounded-2xl border border-stone-200/90 bg-white shadow-[0_12px_40px_-12px_rgba(15,23,42,0.08)] ${isNeon ? "ring-1 ring-cyan-200/40" : ""}`}
+      className={`flex min-w-0 flex-col overflow-hidden rounded-2xl border border-stone-200/90 bg-white shadow-[0_12px_40px_-12px_rgba(15,23,42,0.08)] ${isNeon ? "ring-1 ring-cyan-200/40" : ""}`}
     >
       <div className="flex items-start justify-between gap-2 border-b border-stone-100 bg-stone-50/80 px-4 py-3">
         <div className="min-w-0">
@@ -90,6 +91,12 @@ function DeckCard({
 
 export function VisualDeck() {
   const [order, setOrder] = useState<DeckKey[]>(["sketch", "contour", "line", "image"]);
+  const sketchCanvas = useResponsiveCanvasSize({
+    maxWidth: 400,
+    aspect: 380 / 260,
+    minWidth: 220,
+    minHeight: 150,
+  });
   const sourcePath = useBrianStore((s) => s.sourcePath);
   const originalImageSrc = useBrianStore((s) => s.originalImageSrc);
   const lineArtDataUrl = useBrianStore((s) => s.lineArtDataUrl);
@@ -113,7 +120,7 @@ export function VisualDeck() {
   }
 
   return (
-    <div className="mx-auto mt-12 grid max-w-6xl gap-6 sm:grid-cols-2">
+    <div className="mx-auto mt-12 grid min-w-0 max-w-6xl gap-6 sm:grid-cols-2">
       {order.map((key, index) => (
         <DeckCard
           key={key}
@@ -124,8 +131,15 @@ export function VisualDeck() {
           onMoveRight={() => swap(key, 1)}
         >
           {key === "sketch" && (
-            <div className="flex h-full w-full max-w-[420px] flex-col items-center justify-center">
-              <FourierVisualizer width={380} height={260} theme="light" className="rounded-xl border border-stone-200" />
+            <div className="flex h-full w-full min-w-0 max-w-[420px] flex-col items-center justify-center">
+              <div ref={sketchCanvas.ref} className="w-full min-w-0">
+                <FourierVisualizer
+                  width={sketchCanvas.width}
+                  height={sketchCanvas.height}
+                  theme="light"
+                  className="w-full max-w-full rounded-xl border border-stone-200"
+                />
+              </div>
               <p className="mt-2 text-center text-[11px] text-slate-500">Live canvas — same state as the playground.</p>
             </div>
           )}
@@ -172,8 +186,8 @@ export function VisualDeck() {
                 </svg>
               )}
               <p className="mt-2 px-4 text-center text-[11px] text-slate-600">
-                When line-art tracing verifies, this mask is the binarized neon layer used to extract that loop;
-                otherwise it is the photo Canny mask for the fallback path. Cyan overlay is the DFT polyline.
+                Canny edge image from the bundle. Cyan overlay is the same resampled closed path the browser FFT uses
+                (chained <span className="font-mono">RETR_LIST</span> edges when that strategy wins).
               </p>
             </div>
           )}
@@ -192,8 +206,8 @@ export function VisualDeck() {
                 </div>
               )}
               <p className="absolute bottom-2 left-2 right-2 text-center text-[11px] text-slate-300">
-                Same Python bundle as contour: blur → Canny → findContours → glow / HSV boost. Neon may show several
-                simplified contours; the DFT uses one largest outer loop on the Canny mask.
+                Same Python bundle as contour: blur → Canny → neon / glow. The DFT path is built from stitched Canny
+                chains, not only this neon’s outer shell.
               </p>
             </div>
           )}

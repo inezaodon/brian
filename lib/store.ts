@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { FourierModel, Point2 } from "./fourier";
 import { buildDemoProfessorPath } from "./demoPath";
 import { buildFourierModel } from "./fourier";
+import { buildRegionModels } from "./regionFourier";
 
 const DEFAULT_SAMPLES = 512;
 const DEFAULT_SPARSE = 400;
@@ -9,6 +10,11 @@ const DEFAULT_SPARSE = 400;
 type BrianState = {
   sourcePath: Point2[];
   model: FourierModel | null;
+  /** When >1, epicycle canvas uses one model per spatial region (cuts at largest gaps). */
+  featureRegions: number;
+  regionModels: FourierModel[];
+  /** Last FFT origin from portrait upload (image center); used when recomputing regions. */
+  lastFftOrigin: Point2 | null;
   /** Public path or blob: URL for the raster shown next to traces. */
   originalImageSrc: string | null;
   /** PNG data URL from OpenCV neon layer (`/api/portrait_pipeline` bundle). */
@@ -27,6 +33,7 @@ type BrianState = {
   lineWidth: number;
   scrub: number;
   setMaxTerms: (n: number) => void;
+  setFeatureRegions: (n: number) => void;
   setSpeed: (s: number) => void;
   setEdgeThreshold: (n: number) => void;
   setShowCircles: (v: boolean) => void;
@@ -52,11 +59,19 @@ function computeModel(path: Point2[], fftOrigin?: Point2): FourierModel {
   return buildFourierModel(path, DEFAULT_SAMPLES, DEFAULT_SPARSE, fftOrigin);
 }
 
+function computeRegionModels(path: Point2[], regionCount: number): FourierModel[] {
+  if (regionCount <= 1) return [];
+  return buildRegionModels(path, regionCount, DEFAULT_SAMPLES, DEFAULT_SPARSE);
+}
+
 const demo = buildDemoProfessorPath();
 
 export const useBrianStore = create<BrianState>((set, get) => ({
   sourcePath: demo,
   model: computeModel(demo),
+  featureRegions: 1,
+  regionModels: [],
+  lastFftOrigin: null,
   originalImageSrc: null,
   lineArtDataUrl: null,
   edgeMaskDataUrl: null,
@@ -72,6 +87,16 @@ export const useBrianStore = create<BrianState>((set, get) => ({
   setMaxTerms: (n) => {
     set({ maxTerms: n });
   },
+  setFeatureRegions: (n) => {
+    const k = Math.max(1, Math.min(12, Math.round(n)));
+    const { sourcePath } = get();
+    const fft = get().lastFftOrigin ?? undefined;
+    set({
+      featureRegions: k,
+      model: computeModel(sourcePath, fft),
+      regionModels: computeRegionModels(sourcePath, k),
+    });
+  },
   setSpeed: (s) => set({ speed: s }),
   setEdgeThreshold: (n) => set({ edgeThreshold: Math.min(255, Math.max(20, n)) }),
   setOriginalImageSrc: (src) => {
@@ -85,12 +110,26 @@ export const useBrianStore = create<BrianState>((set, get) => ({
   setLineWidth: (w) => set({ lineWidth: w }),
   setScrub: (s) => set({ scrub: Math.max(0, Math.min(1, s)) }),
   setSourcePath: (path, options) => {
-    const model = computeModel(path, options?.fftOrigin);
+    const fft = options?.fftOrigin;
+    const model = computeModel(path, fft);
+    const k = get().featureRegions;
+    const regionModels = computeRegionModels(path, k);
     const patch: Partial<
-      Pick<BrianState, "sourcePath" | "model" | "lastImageSize" | "lineArtDataUrl" | "edgeMaskDataUrl">
+      Pick<
+        BrianState,
+        | "sourcePath"
+        | "model"
+        | "regionModels"
+        | "lastFftOrigin"
+        | "lastImageSize"
+        | "lineArtDataUrl"
+        | "edgeMaskDataUrl"
+      >
     > = {
       sourcePath: path,
       model,
+      regionModels,
+      lastFftOrigin: fft ? { x: fft.x, y: fft.y } : null,
     };
     if (options && "imageSize" in options) {
       patch.lastImageSize = options.imageSize ?? null;

@@ -8,6 +8,8 @@ import { useState } from "react";
 export function Controls() {
   const maxTerms = useBrianStore((s) => s.maxTerms);
   const setMaxTerms = useBrianStore((s) => s.setMaxTerms);
+  const featureRegions = useBrianStore((s) => s.featureRegions);
+  const setFeatureRegions = useBrianStore((s) => s.setFeatureRegions);
   const speed = useBrianStore((s) => s.speed);
   const setSpeed = useBrianStore((s) => s.setSpeed);
   const edgeThreshold = useBrianStore((s) => s.edgeThreshold);
@@ -39,6 +41,23 @@ export function Controls() {
           className="mt-2 w-full accent-cyan-600"
         />
         <div className="mt-1 font-mono text-sm text-cyan-800">{maxTerms}</div>
+      </div>
+      <div>
+        <label className="text-xs font-medium uppercase tracking-wider text-slate-500">Feature regions</label>
+        <input
+          type="range"
+          min={1}
+          max={12}
+          step={1}
+          value={featureRegions}
+          onChange={(e) => setFeatureRegions(+e.target.value)}
+          className="mt-2 w-full accent-teal-600"
+        />
+        <p className="mt-1 text-[11px] leading-snug text-slate-600">
+          1 = one global Fourier path. Higher = split the closed path at the largest gaps, each region gets its own
+          centroid and epicycle stack (different hues on the canvas).
+        </p>
+        <div className="mt-1 font-mono text-sm text-teal-800">{featureRegions}</div>
       </div>
       <div>
         <label className="text-xs font-medium uppercase tracking-wider text-slate-500">Speed</label>

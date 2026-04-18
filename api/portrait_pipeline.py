@@ -82,7 +82,7 @@ class handler(BaseHTTPRequestHandler):
                     et = 105
             et = max(20, min(255, et))
             ms = 420
-            sp = 384
+            sp = 512
             if "maxSide" in parts:
                 try:
                     ms = max(64, min(512, int(parts["maxSide"].decode("utf-8", errors="ignore").strip())))
@@ -92,7 +92,7 @@ class handler(BaseHTTPRequestHandler):
                 try:
                     sp = max(32, min(640, int(parts["samplePoints"].decode("utf-8", errors="ignore").strip())))
                 except ValueError:
-                    sp = 384
+                    sp = 512
             arr = np.frombuffer(raw, dtype=np.uint8)
             bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
             if bgr is None:

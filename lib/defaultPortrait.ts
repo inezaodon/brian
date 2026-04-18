@@ -16,7 +16,7 @@ export async function reloadDefaultPortrait(): Promise<void> {
   const bundle = await fetchPortraitPipeline(file, {
     edgeThreshold,
     maxSide: 420,
-    samplePoints: 384,
+    samplePoints: 512,
   });
   if (!bundle) throw new Error("Portrait pipeline unavailable (Python/OpenCV).");
   const { path, fftOrigin, width, height, edgeMaskDataUrl, lineArtDataUrl } = bundle;

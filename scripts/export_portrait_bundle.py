@@ -21,7 +21,7 @@ def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("-i", "--input", type=Path, required=True)
     p.add_argument("--max-side", type=int, default=420)
-    p.add_argument("--sample-points", type=int, default=384)
+    p.add_argument("--sample-points", type=int, default=512)
     p.add_argument("--edge-threshold", type=int, default=105)
     args = p.parse_args()
     if not args.input.is_file():

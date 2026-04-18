@@ -3,7 +3,7 @@ import type { FourierModel, Point2 } from "./fourier";
 import { buildDemoProfessorPath } from "./demoPath";
 import { buildFourierModel } from "./fourier";
 
-const DEFAULT_SAMPLES = 384;
+const DEFAULT_SAMPLES = 512;
 const DEFAULT_SPARSE = 400;
 
 type BrianState = {

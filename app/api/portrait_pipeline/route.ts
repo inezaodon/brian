@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
         ? Math.min(255, Math.max(20, Math.round(Number(edgeRaw))))
         : 105;
     const maxSide = numField(form.get("maxSide"), 420, 64, 512);
-    const samplePoints = numField(form.get("samplePoints"), 384, 32, 640);
+    const samplePoints = numField(form.get("samplePoints"), 512, 32, 640);
 
     const id = randomUUID();
     const ext = inputSuffix(file);

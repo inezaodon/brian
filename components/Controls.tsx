@@ -115,7 +115,7 @@ export function Controls() {
               const bundle = await fetchPortraitPipeline(f, {
                 edgeThreshold,
                 maxSide: 420,
-                samplePoints: 384,
+                samplePoints: 512,
               });
               if (!bundle) {
                 if (objectUrl) URL.revokeObjectURL(objectUrl);
@@ -123,8 +123,7 @@ export function Controls() {
                 setMsg("Portrait pipeline failed (install Python deps: pip install -r requirements.txt, then restart dev).");
                 return;
               }
-              const { path, fftOrigin, width, height, edgeMaskDataUrl, lineArtDataUrl, lineArtPathVerify, pathSource } =
-                bundle;
+              const { path, fftOrigin, width, height, edgeMaskDataUrl, lineArtDataUrl, pathSource } = bundle;
               setSourcePath(path, {
                 fftOrigin,
                 imageSize: { w: width, h: height },
@@ -132,11 +131,11 @@ export function Controls() {
                 edgeMaskDataUrl,
               });
               setMsg(
-                lineArtPathVerify
-                  ? "Fourier sketch: path traced from neon line art — verified on pixels, then DFT + epicycle."
+                pathSource === "chainedCanny"
+                  ? "Fourier sketch: all Canny edge chains stitched (eyes, nose, mouth, hair, outline), then DFT + epicycle."
                   : pathSource === "photoCanny"
-                    ? "Fourier sketch: line-art trace did not verify; using photo Canny fallback path. Try edge threshold or a clearer portrait."
-                    : "Portrait bundle loaded; check line-art alignment.",
+                    ? "Fourier sketch: chained Canny failed; using merged-blob photo Canny fallback. Try edge threshold."
+                    : "Portrait bundle loaded.",
               );
             } catch {
               if (objectUrl) URL.revokeObjectURL(objectUrl);

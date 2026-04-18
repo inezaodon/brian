@@ -7,9 +7,9 @@ export type PortraitPipelineResponse = {
   path: Point2[];
   edgeMaskPngBase64: string;
   lineArtPngBase64: string;
-  /** `lineArt` when DFT path was traced from the neon image; `photoCanny` if we fell back. */
+  /** `chainedCanny` = stitched RETR_LIST edges; `photoCanny` = merged-blob fallback. */
   pathSource?: string;
-  /** True when most samples along the path land on bright neon pixels. */
+  /** True when the primary chained-Canny strategy produced a path. */
   lineArtPathVerify?: boolean;
   error?: string;
 };
@@ -40,7 +40,7 @@ export async function fetchPortraitPipeline(
   form.append("image", file);
   form.append("edgeThreshold", String(opts?.edgeThreshold ?? 105));
   form.append("maxSide", String(opts?.maxSide ?? 420));
-  form.append("samplePoints", String(opts?.samplePoints ?? 384));
+  form.append("samplePoints", String(opts?.samplePoints ?? 512));
   try {
     const res = await fetch(url, { method: "POST", body: form });
     if (!res.ok) return null;

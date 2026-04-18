@@ -1,4 +1,4 @@
-"""Single OpenCV pipeline: edge mask, DFT path (preferably from neon line art), and neon PNG."""
+"""Single OpenCV pipeline: Canny-chained DFT path, edge preview, and neon line-art PNG."""
 
 from __future__ import annotations
 
@@ -76,105 +76,96 @@ def _path_dict_from_pts(samp: np.ndarray) -> list[dict[str, float]]:
     return [{"x": float(samp[i, 0]), "y": float(samp[i, 1])} for i in range(samp.shape[0])]
 
 
-def _binary_mask_from_neon(line_bgr: np.ndarray, dilate_iters: int = 0) -> np.ndarray:
-    gray = cv2.cvtColor(line_bgr, cv2.COLOR_BGR2GRAY)
-    mx = np.max(line_bgr, axis=2)
-    lab = cv2.cvtColor(line_bgr, cv2.COLOR_BGR2LAB)
-    L = lab[:, :, 0]
-    hsv = cv2.cvtColor(line_bgr, cv2.COLOR_BGR2HSV)
+def _chain_contours_nearest_neighbour(
+    contours: list[np.ndarray],
+    min_peri: float,
+) -> np.ndarray | None:
+    """
+    Chain all significant contours into one continuous open polyline using
+    nearest-neighbour endpoint stitching, then close it back to the start.
 
-    cyan = cv2.inRange(hsv, (72, 25, 25), (118, 255, 255))
+    Each contour contributes its full point sequence. Between contours we jump
+    directly (no filler points) — the DFT handles the discontinuity as
+    high-frequency terms.
 
-    gray_blur = cv2.GaussianBlur(gray, (0, 0), sigmaX=3)
-    mx_blur = cv2.GaussianBlur(mx.astype(np.float32), (0, 0), sigmaX=3)
+    Returns an (N, 2) float64 array, or None if no valid contours exist.
+    """
+    valid: list[np.ndarray] = []
+    for cnt in contours:
+        pts = cnt.reshape(-1, 2).astype(np.float64)
+        if len(pts) < 2:
+            continue
+        peri = float(np.sum(np.linalg.norm(np.diff(pts, axis=0), axis=1)))
+        if peri >= min_peri:
+            valid.append(pts)
 
-    m1 = (gray > 12).astype(np.uint8) * 255
-    m2 = (mx > 18).astype(np.uint8) * 255
-    m3 = (L > 15).astype(np.uint8) * 255
-    m4 = (gray_blur > 8).astype(np.uint8) * 255
-    m5 = (mx_blur > 12).astype(np.uint8) * 255
+    if not valid:
+        return None
 
-    m = cv2.bitwise_or(m1, m2)
-    m = cv2.bitwise_or(m, m3)
-    m = cv2.bitwise_or(m, m4)
-    m = cv2.bitwise_or(m, m5)
-    m = cv2.bitwise_or(m, cyan)
-
-    k_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
-    m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, k_close, iterations=3 + dilate_iters)
-    m = cv2.morphologyEx(
-        m,
-        cv2.MORPH_OPEN,
-        cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)),
-        iterations=1,
+    valid.sort(
+        key=lambda p: np.sum(np.linalg.norm(np.diff(p, axis=0), axis=1)),
+        reverse=True,
     )
-    return m
+
+    chained: list[np.ndarray] = [valid[0]]
+    remaining = valid[1:]
+
+    while remaining:
+        last_pt = chained[-1][-1]
+        best_idx = 0
+        best_dist = np.inf
+        best_flip = False
+
+        for i, seg in enumerate(remaining):
+            d_start = np.linalg.norm(seg[0] - last_pt)
+            d_end = np.linalg.norm(seg[-1] - last_pt)
+            if d_start <= d_end:
+                d, flip = d_start, False
+            else:
+                d, flip = d_end, True
+            if d < best_dist:
+                best_dist = d
+                best_idx = i
+                best_flip = flip
+
+        seg = remaining.pop(best_idx)
+        if best_flip:
+            seg = seg[::-1]
+        chained.append(seg)
+
+    return np.vstack(chained)
 
 
-def _path_from_binary_mask(
-    mask_u8: np.ndarray,
+def _chained_canny_path(
+    img: np.ndarray,
+    canny_low: int,
+    canny_high: int,
     sample_points: int,
-    min_area: float,
+    min_peri: float,
 ) -> list[dict[str, float]] | None:
-    h, w = mask_u8.shape
-    contours, _ = cv2.findContours(mask_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    """
+    Run Canny on the image, collect ALL contours (RETR_LIST so inner features
+    are included), chain them into one path, resample by arc length.
+    """
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    edges = cv2.Canny(blurred, canny_low, canny_high)
+
+    # RETR_LIST: retrieves every contour without hierarchy — gets eyes, nose,
+    # mouth, jaw, hair, clothing as separate contours, not just the outer shell.
+    contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
     if not contours:
         return None
 
-    filled = np.zeros((h, w), dtype=np.uint8)
-    for cnt in contours:
-        if cv2.contourArea(cnt) >= min_area * 0.15:
-            cv2.drawContours(filled, [cnt], -1, 255, thickness=cv2.FILLED)
-
-    if filled.sum() == 0:
+    chained = _chain_contours_nearest_neighbour(contours, min_peri=min_peri)
+    if chained is None or len(chained) < 3:
         return None
 
-    close_k = max(7, int(min(w, h) * 0.06))
-    close_k = close_k | 1
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (close_k, close_k))
-    closed = cv2.morphologyEx(filled, cv2.MORPH_CLOSE, kernel, iterations=3)
-    closed = cv2.morphologyEx(closed, cv2.MORPH_DILATE, kernel, iterations=1)
-
-    outer, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    if not outer:
-        return None
-    best = max(outer, key=cv2.contourArea)
-    if cv2.contourArea(best) < min_area:
-        return None
-
-    pts = best.reshape(-1, 2).astype(np.float64)
     try:
-        samp = resample_closed_polyline(pts, sample_points)
+        samp = resample_closed_polyline(chained, sample_points)
     except ValueError:
         return None
     return _path_dict_from_pts(samp)
-
-
-def _verify_path_on_line_art(
-    line_bgr: np.ndarray,
-    path: list[dict[str, float]],
-    stride: int = 4,
-    radius: int = 5,
-    threshold: float = 0.55,
-) -> bool:
-    if len(path) < 16:
-        return False
-    gray = cv2.cvtColor(line_bgr, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (0, 0), sigmaX=radius * 0.6)
-    h, w = blurred.shape
-    ok = 0
-    total = 0
-    for i in range(0, len(path), stride):
-        p = path[i]
-        x = int(np.clip(round(p["x"]), 0, w - 1))
-        y = int(np.clip(round(p["y"]), 0, h - 1))
-        x0, x1 = max(0, x - radius), min(w, x + radius + 1)
-        y0, y1 = max(0, y - radius), min(h, y + radius + 1)
-        patch = blurred[y0:y1, x0:x1]
-        total += 1
-        if patch.size > 0 and int(patch.max()) > 18:
-            ok += 1
-    return total > 0 and (ok / total) >= threshold
 
 
 def _photo_canny_path_and_edges(
@@ -227,7 +218,7 @@ def build_portrait_bundle(
     bgr: np.ndarray,
     *,
     max_side: int = 420,
-    sample_points: int = 384,
+    sample_points: int = 512,
     edge_threshold: int = 105,
     min_area: float | None = None,
 ) -> dict[str, Any]:
@@ -242,9 +233,28 @@ def build_portrait_bundle(
     if min_area is None:
         min_area = max(80.0, (w * h) * 0.001)
 
-    fallback_path, photo_edges = _photo_canny_path_and_edges(
-        img, canny_low, canny_high, sample_points, min_area, w, h
+    # ── Strategy 1: chain all Canny contours (eyes, nose, mouth, hair, body) ──
+    # min_peri filters sub-pixel noise; scale it with image size.
+    min_peri = max(15.0, min_area**0.5)
+    path_list = _chained_canny_path(
+        img, canny_low, canny_high, sample_points, min_peri=min_peri
     )
+    path_source = "chainedCanny"
+
+    if path_list is None:
+        # ── Strategy 2: single largest Canny contour (old photoCanny fallback) ──
+        path_list, _photo_edges = _photo_canny_path_and_edges(
+            img, canny_low, canny_high, sample_points, min_area, w, h
+        )
+        path_source = "photoCanny"
+        _log.warning("portrait_bundle: chained path failed, fell back to photoCanny")
+
+    # Edge mask PNG: use the Canny edge image for display
+    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blurred_img = cv2.GaussianBlur(gray_img, (5, 5), 0)
+    edge_for_png = cv2.Canny(blurred_img, canny_low, canny_high)
+
+    line_art_verify = path_source == "chainedCanny" and path_list is not None
 
     line_bgr = run_pipeline(
         img,
@@ -265,54 +275,6 @@ def build_portrait_bundle(
         hsv_v_gain=1.12,
         hsv_s_gain=1.35,
     )
-
-    path_list: list[dict[str, float]]
-    edge_for_png: np.ndarray
-    path_source: str
-    line_art_verify = False
-
-    mask0 = _binary_mask_from_neon(line_bgr, dilate_iters=0)
-    cand0 = _path_from_binary_mask(mask0, sample_points, min_area)
-    ok0 = cand0 is not None and _verify_path_on_line_art(line_bgr, cand0)
-
-    if cand0 is None:
-        _log.warning("portrait_bundle: line-art mask produced no valid contour (mask0)")
-    elif not ok0:
-        _log.warning(
-            "portrait_bundle: line-art path failed proximity verification (len=%d, trying dilated mask)",
-            len(cand0),
-        )
-
-    if ok0:
-        path_list = cand0
-        edge_for_png = mask0
-        path_source = "lineArt"
-        line_art_verify = True
-    else:
-        mask1 = _binary_mask_from_neon(line_bgr, dilate_iters=1)
-        cand1 = _path_from_binary_mask(mask1, sample_points, min_area * 0.85)
-        ok1 = cand1 is not None and _verify_path_on_line_art(line_bgr, cand1)
-        if cand1 is None:
-            _log.warning("portrait_bundle: dilated line-art mask produced no valid contour (mask1)")
-        elif not ok1:
-            _log.warning(
-                "portrait_bundle: dilated line-art path failed proximity verification (len=%d)",
-                len(cand1),
-            )
-        if ok1:
-            path_list = cand1
-            edge_for_png = mask1
-            path_source = "lineArt"
-            line_art_verify = True
-        else:
-            _log.warning(
-                "portrait_bundle: fell back to photoCanny path (canny_low=%d, canny_high=%d)",
-                canny_low,
-                canny_high,
-            )
-            path_list = fallback_path
-            edge_for_png = photo_edges
-            path_source = "photoCanny"
 
     ok_e, edge_buf = cv2.imencode(".png", edge_for_png)
     ok_l, line_buf = cv2.imencode(".png", line_bgr)
